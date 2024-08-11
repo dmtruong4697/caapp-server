@@ -1,14 +1,18 @@
 package main
 
 import (
+	"caapp-server/src/database"
 	"fmt"
 	"log"
 	"net/http"
 )
 
 func main() {
-	mux := http.NewServeMux()
 
+	// init db
+	database.Connect()
+
+	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Welcome to the server!")
 	})
