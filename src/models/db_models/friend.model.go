@@ -5,8 +5,8 @@ import (
 )
 
 type Friend struct {
-	ID           int       `json:"id" gorm:"primaryKey"`
-	FirstUserID  int       `json:"first_user_id"`
-	SecondUserID int       `json:"second_user_id"`
+	ID           uint      `json:"id" gorm:"primaryKey"`
+	FirstUserID  uint      `json:"first_user_id"`
+	SecondUserID uint      `json:"second_user_id"`
 	CreateAt     time.Time `json:"create_at"`
 }
