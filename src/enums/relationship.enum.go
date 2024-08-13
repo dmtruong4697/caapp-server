@@ -1,0 +1,7 @@
+package enums
+
+const (
+	RELATIONSHIP_NOT_FRIEND string = "NOT_FRIEND"
+	RELATIONSHIP_FRIEND     string = "FRIEND"
+	RELATIONSHIP_BLOCKED    string = "BLOCKED"
+)

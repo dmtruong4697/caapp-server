@@ -3,7 +3,7 @@ package models
 import "github.com/dgrijalva/jwt-go"
 
 type LoginClaims struct {
-	ID    int    `json:"id" gorm:"primaryKey"`
+	ID    uint   `json:"id" gorm:"primaryKey"`
 	Email string `json:"email"`
 	jwt.StandardClaims
 }
