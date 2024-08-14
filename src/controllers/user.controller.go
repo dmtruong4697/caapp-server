@@ -1,64 +1,57 @@
 package controllers
 
 import (
-	"encoding/json"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 
 	"caapp-server/src/database"
 	db_models "caapp-server/src/models/db_models"
-	responce_models "caapp-server/src/models/responce_models"
+	response_models "caapp-server/src/models/responce_models"
 )
 
-func GetUserInfo(w http.ResponseWriter, r *http.Request) {
-	current_user_id := r.Context().Value("id").(int)
+func GetUserInfo(c *gin.Context) {
+	currentUserID := c.MustGet("id").(int)
 
-	// get user id from request body
-	var user_id uint
-	err := json.NewDecoder(r.Body).Decode(&user_id)
-	if err != nil {
-		http.Error(w, "Failed to decode user info", http.StatusBadRequest)
+	var userID uint
+	if err := c.BindJSON(&userID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to decode user info"})
 		return
 	}
 
-	// get user from database
 	var dbUser db_models.User
-	if err := database.DB.Where("id = ?", user_id).First(&dbUser).Error; err != nil {
-		http.Error(w, "User not found", http.StatusUnauthorized)
+	if err := database.DB.Where("id = ?", userID).First(&dbUser).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
 		return
 	}
 
 	var friend db_models.Friend
-	if err := database.DB.Where("(sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)", current_user_id, user_id, user_id, current_user_id).First(&friend).Error; err != nil {
+	database.DB.Where("(sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)", currentUserID, userID, userID, currentUserID).First(&friend)
 
+	response := response_models.GetUserInfoResponce{
+		ID:                 int(dbUser.ID),
+		AccountStatus:      dbUser.AccountStatus,
+		AvatarImage:        dbUser.AvatarImage,
+		Country:            dbUser.Country,
+		CoverImage:         dbUser.CoverImage,
+		CreateAt:           dbUser.CreateAt,
+		DateOfBirth:        dbUser.DateOfBirth,
+		Email:              dbUser.Email,
+		FirstName:          dbUser.FirstName,
+		MiddleName:         dbUser.MiddleName,
+		LastName:           dbUser.LastName,
+		Gender:             dbUser.Gender,
+		HashtagName:        dbUser.HashtagName,
+		JobName:            dbUser.JobName,
+		Language:           dbUser.Language,
+		VerificationStatus: dbUser.VerificationStatus,
+		TimeZone:           dbUser.TimeZone,
+		ProfileDescription: dbUser.ProfileDescription,
+		PhoneNumber:        dbUser.PhoneNumber,
+		LastActive:         dbUser.LastActive,
+		LastUpdate:         dbUser.LastUpdate,
+		Friend:             friend,
 	}
 
-	var responce responce_models.GetUserInfoResponce
-	responce.ID = int(dbUser.ID)
-	responce.AccountStatus = dbUser.AccountStatus
-	responce.AvatarImage = dbUser.AvatarImage
-	responce.Country = dbUser.Country
-	responce.CoverImage = dbUser.CoverImage
-	responce.CreateAt = dbUser.CreateAt
-	responce.DateOfBirth = dbUser.DateOfBirth
-	responce.Email = dbUser.Email
-	responce.FirstName = dbUser.FirstName
-	responce.MiddleName = dbUser.MiddleName
-	responce.LastName = dbUser.LastName
-	responce.Gender = dbUser.Gender
-	responce.HashtagName = dbUser.HashtagName
-	responce.JobName = dbUser.JobName
-	responce.Language = dbUser.Language
-	responce.VerificationStatus = dbUser.VerificationStatus
-	responce.TimeZone = dbUser.TimeZone
-	responce.ProfileDescription = dbUser.ProfileDescription
-	responce.PhoneNumber = dbUser.PhoneNumber
-	responce.LastActive = dbUser.LastActive
-	responce.LastUpdate = dbUser.LastUpdate
-	responce.Friend = friend
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(responce); err != nil {
-		http.Error(w, "Failed to encode responce info", http.StatusInternalServerError)
-	}
+	c.JSON(http.StatusOK, response)
 }

@@ -1,15 +1,14 @@
 package models
 
-type FriendRequestRequest struct {
-	ReceiverID int `json:"receiver_id"`
+type GetFriendRequestRequest struct {
+	ID int `json:"id"`
+}
+
+type GetAllFriendRequestSentRequest struct {
 }
 
 type AcceptRequestRequest struct {
 	ID int `json:"id"`
-}
-
-type GetRelationshipRequest struct {
-	UserID uint `json:"user_id"`
 }
 
 type CreateFriendRequestRequest struct {
@@ -21,5 +20,9 @@ type AcceptFriendRequestRequest struct {
 }
 
 type RefuseFriendRequestRequest struct {
+	ID uint `json:"id"`
+}
+
+type DeleteFriendRequestRequest struct {
 	ID uint `json:"id"`
 }
