@@ -4,44 +4,40 @@ import (
 	"caapp-server/src/database"
 	db_models "caapp-server/src/models/db_models"
 	request_models "caapp-server/src/models/request_models"
-	"encoding/json"
 	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
-func GetProfileInfo(w http.ResponseWriter, r *http.Request) {
-	user_id := r.Context().Value("id").(uint)
+func GetProfileInfo(c *gin.Context) {
+	userID := c.MustGet("id").(uint)
 
 	var dbUser db_models.User
-	if err := database.DB.Where("id = ?", user_id).First(&dbUser).Error; err != nil {
-		http.Error(w, "User not found", http.StatusUnauthorized)
+	if err := database.DB.Where("id = ?", userID).First(&dbUser).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(dbUser); err != nil {
-		http.Error(w, "Failed to encode user info", http.StatusInternalServerError)
-	}
+	c.JSON(http.StatusOK, dbUser)
 }
 
-func UpdateProfileInfo(w http.ResponseWriter, r *http.Request) {
-	email := r.Context().Value("email").(string)
+func UpdateProfileInfo(c *gin.Context) {
+	email := c.MustGet("email").(string)
 
 	var dbUser db_models.User
 	if err := database.DB.Where("email = ?", email).First(&dbUser).Error; err != nil {
-		http.Error(w, "User not found", http.StatusUnauthorized)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
 		return
 	}
 
 	var updatedProfile request_models.UpdatedProfileRequest
-	err := json.NewDecoder(r.Body).Decode(&updatedProfile)
-	if err != nil {
-		http.Error(w, "Failed to decode user info", http.StatusBadRequest)
+	if err := c.BindJSON(&updatedProfile); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to decode user info"})
 		return
 	}
 
-	// update user profile
+	// Update user profile
 	dbUser.FirstName = updatedProfile.FirstName
 	dbUser.MiddleName = updatedProfile.MiddleName
 	dbUser.LastName = updatedProfile.LastName
@@ -58,48 +54,39 @@ func UpdateProfileInfo(w http.ResponseWriter, r *http.Request) {
 	dbUser.TimeZone = updatedProfile.TimeZone
 	dbUser.LastUpdate = time.Now()
 
-	// save update
+	// Save update
 	if err := database.DB.Save(&dbUser).Error; err != nil {
-		http.Error(w, "Failed to update user information", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user information"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(dbUser); err != nil {
-		http.Error(w, "Failed to encode user info", http.StatusInternalServerError)
-	}
+	c.JSON(http.StatusOK, dbUser)
 }
 
-func UpdatePassword(w http.ResponseWriter, r *http.Request) {
-	user_id := r.Context().Value("id").(uint)
+func UpdatePassword(c *gin.Context) {
+	userID := c.MustGet("id").(uint)
 
 	var dbUser db_models.User
-	if err := database.DB.Where("id = ?", user_id).First(&dbUser).Error; err != nil {
-		http.Error(w, "User not found", http.StatusUnauthorized)
+	if err := database.DB.Where("id = ?", userID).First(&dbUser).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
 		return
 	}
 
 	var updatedPassword request_models.UpdatedPaswordRequest
-	err := json.NewDecoder(r.Body).Decode(&updatedPassword)
-	if err != nil {
-		http.Error(w, "Failed to decode user info", http.StatusBadRequest)
+	if err := c.BindJSON(&updatedPassword); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to decode user info"})
 		return
 	}
 
-	// update account password
+	// Update account password
 	dbUser.Password = updatedPassword.Password
 	dbUser.LastUpdate = time.Now()
 
-	// save update
+	// Save update
 	if err := database.DB.Save(&dbUser).Error; err != nil {
-		http.Error(w, "Failed to update user information", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user information"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(dbUser); err != nil {
-		http.Error(w, "Failed to encode user info", http.StatusInternalServerError)
-	}
+	c.JSON(http.StatusOK, dbUser)
 }
