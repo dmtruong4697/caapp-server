@@ -1,5 +1,5 @@
 package models
 
 type GetUserInfoRequestBody struct {
-	ID int `json:"id"`
+	ID uint `json:"id"`
 }

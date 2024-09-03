@@ -1,14 +1,14 @@
 package models
 
 type GetFriendRequestRequest struct {
-	ID int `json:"id"`
+	ID uint `json:"id"`
 }
 
 type GetAllFriendRequestSentRequest struct {
 }
 
 type AcceptRequestRequest struct {
-	ID int `json:"id"`
+	ID uint `json:"id"`
 }
 
 type CreateFriendRequestRequest struct {
