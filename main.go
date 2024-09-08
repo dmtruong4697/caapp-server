@@ -2,6 +2,7 @@ package main
 
 import (
 	"caapp-server/src/database"
+	"caapp-server/src/routes"
 	"log"
 	"net/http"
 	"os"
@@ -18,7 +19,7 @@ func main() {
 
 	database.Connect()
 
-	r := gin.Default()
+	r := routes.SetupRouter()
 
 	r.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "Welcome to the server!")
