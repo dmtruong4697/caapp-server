@@ -1,24 +1,23 @@
 package middlewares
 
 import (
-	"context"
-	"net/http"
-
 	"caapp-server/src/controllers"
 	request_models "caapp-server/src/models/request_models"
+	"net/http"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
 )
 
-func AuthMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie("token")
+func AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		cookie, err := c.Request.Cookie("token")
 		if err != nil {
 			if err == http.ErrNoCookie {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 				return
 			}
-			http.Error(w, "Bad Request", http.StatusBadRequest)
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Bad Request"})
 			return
 		}
 
@@ -31,19 +30,19 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		if err != nil {
 			if err == jwt.ErrSignatureInvalid {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 				return
 			}
-			http.Error(w, "Bad Request", http.StatusBadRequest)
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Bad Request"})
 			return
 		}
 
 		if !token.Valid {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "id", claims.ID)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+		c.Set("id", claims.ID)
+		c.Next()
+	}
 }
