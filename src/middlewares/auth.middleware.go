@@ -11,17 +11,12 @@ import (
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		cookie, err := c.Request.Cookie("token")
-		if err != nil {
-			if err == http.ErrNoCookie {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-				return
-			}
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Bad Request"})
+		tokenStr := c.GetHeader("Authorization")
+		// fmt.Print(tokenStr)
+		if tokenStr == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized - Token not provided"})
 			return
 		}
-
-		tokenStr := cookie.Value
 		claims := &request_models.LoginClaims{}
 
 		token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
@@ -30,7 +25,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		if err != nil {
 			if err == jwt.ErrSignatureInvalid {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized ErrSignatureInvalid"})
 				return
 			}
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Bad Request"})
@@ -38,7 +33,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		if !token.Valid {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized Invalid"})
 			return
 		}
 

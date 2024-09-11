@@ -10,5 +10,8 @@ func SetupRouter() *gin.Engine {
 	// Auth routes
 	SetupAuthRoutes(r)
 
+	// Profile routes
+	SetupProfileRoutes(r)
+
 	return r
 }

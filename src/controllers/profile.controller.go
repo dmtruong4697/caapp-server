@@ -4,6 +4,7 @@ import (
 	"caapp-server/src/database"
 	db_models "caapp-server/src/models/db_models"
 	request_models "caapp-server/src/models/request_models"
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -19,7 +20,17 @@ func GetProfileInfo(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dbUser)
+	jsonUser, err := json.Marshal(dbUser)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		return
+	}
+
+	responseData := map[string]interface{}{
+		"profile": string(jsonUser),
+	}
+
+	c.JSON(http.StatusOK, responseData)
 }
 
 func UpdateProfileInfo(c *gin.Context) {

@@ -26,7 +26,7 @@ func Register(c *gin.Context) {
 
 	existingUser := models.User{}
 	if err := database.DB.Where("email = ?", user.Email).First(&existingUser).Error; err == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Email already registered"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email already registered", "error_code": "000001"})
 		return
 	}
 
@@ -35,7 +35,7 @@ func Register(c *gin.Context) {
 	user.AccountStatus = string(enums.USER_ACCOUNT_STATUS_NOT_ACTIVE)
 
 	if err := database.DB.Create(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "error_code": "000002"})
 		return
 	}
 
@@ -50,7 +50,7 @@ func Register(c *gin.Context) {
 func ValidateEmail(c *gin.Context) {
 	var validateEmailRequestBody request_models.ValidateEmailRequestBody
 	if err := c.BindJSON(&validateEmailRequestBody); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "error_code": "000003"})
 		return
 	}
 
@@ -125,8 +125,8 @@ func Login(c *gin.Context) {
 	}
 
 	responseData := map[string]interface{}{
-		"token": tokenString,
-		"user":  string(jsonUser),
+		"token":   tokenString,
+		"profile": string(jsonUser),
 	}
 
 	c.JSON(http.StatusOK, responseData)
