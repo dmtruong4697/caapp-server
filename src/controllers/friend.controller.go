@@ -174,3 +174,19 @@ func DeleteFriendRequest(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Friend request delete successfully"})
 }
+
+func GetSuggestUser(c *gin.Context) {
+	currentUserID := c.MustGet("id").(uint)
+
+	var users []db_models.User
+	database.DB.Find(&users)
+
+	var res responce_models.SearchUserByHashtagNameResponce
+	res.Users = make([]responce_models.GetUserInfoResponce, len(users))
+
+	for i := range users {
+		res.Users[i] = utils.GetUserInfo(currentUserID, users[i].ID)
+	}
+
+	c.JSON(http.StatusOK, res)
+}

@@ -13,5 +13,11 @@ func SetupRouter() *gin.Engine {
 	// Profile routes
 	SetupProfileRoutes(r)
 
+	// Search routes
+	SetupSearchRoutes(r)
+
+	// Friend routes
+	SetupFriendRoutes(r)
+
 	return r
 }

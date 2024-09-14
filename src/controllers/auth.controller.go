@@ -85,12 +85,12 @@ func Login(c *gin.Context) {
 
 	var dbUser models.User
 	if err := database.DB.Where("email = ?", userRequest.Email).First(&dbUser).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error_code": "api_error_401_000001"})
 		return
 	}
 
 	if dbUser.Password != userRequest.Password {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error_code": "api_error_401_000001"})
 		return
 	}
 

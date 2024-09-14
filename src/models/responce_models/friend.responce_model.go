@@ -25,3 +25,7 @@ type GetListFriendRequestSentResponceItem struct {
 type GetListFriendRequestSentResponce struct {
 	Requests []GetListFriendRequestReceivedResponceItem `json:"requests"`
 }
+
+type GetSuggestUserResponce struct {
+	Users []GetUserInfoResponce `json:"users"`
+}
