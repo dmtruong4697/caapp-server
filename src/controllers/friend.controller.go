@@ -190,3 +190,20 @@ func GetSuggestUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, res)
 }
+
+func GetAllFriend(c *gin.Context) {
+	currentUserID := c.MustGet("id").(uint)
+
+	var friends []db_models.Friend
+	database.DB.Where(
+		"(first_user_id = ?) OR (second_user_id = ?)",
+		currentUserID,
+		currentUserID,
+	).Find(&friends)
+
+	c.JSON(http.StatusOK, friends)
+}
+
+func GetAllUserFriend(c *gin.Context) {
+
+}
