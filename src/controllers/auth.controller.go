@@ -26,7 +26,7 @@ func Register(c *gin.Context) {
 
 	existingUser := models.User{}
 	if err := database.DB.Where("email = ?", user.Email).First(&existingUser).Error; err == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Email already registered", "error_code": "000001"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_401_000002"})
 		return
 	}
 
@@ -35,7 +35,7 @@ func Register(c *gin.Context) {
 	user.AccountStatus = string(enums.USER_ACCOUNT_STATUS_NOT_ACTIVE)
 
 	if err := database.DB.Create(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "error_code": "000002"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_400_000003"})
 		return
 	}
 
@@ -50,13 +50,13 @@ func Register(c *gin.Context) {
 func ValidateEmail(c *gin.Context) {
 	var validateEmailRequestBody request_models.ValidateEmailRequestBody
 	if err := c.BindJSON(&validateEmailRequestBody); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "error_code": "000003"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_000004"})
 		return
 	}
 
 	var dbUser models.User
 	if err := database.DB.Where("email = ?", validateEmailRequestBody.Email).First(&dbUser).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error_code": "api_error_401_000005"})
 		return
 	}
 
@@ -65,21 +65,21 @@ func ValidateEmail(c *gin.Context) {
 		dbUser.ValidateCode = ""
 
 		if err := database.DB.Save(&dbUser).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000006"})
 			return
 		}
 
 		message := "Email validation successful. Your account has been validated."
 		c.JSON(http.StatusOK, gin.H{"message": message})
 	} else {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid validation code"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_401_000007"})
 	}
 }
 
 func Login(c *gin.Context) {
 	var userRequest request_models.LoginRequestBody
 	if err := c.BindJSON(&userRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_000008"})
 		return
 	}
 
@@ -97,7 +97,7 @@ func Login(c *gin.Context) {
 	// set device token
 	dbUser.DeviceToken = userRequest.DeviceToken
 	if err := database.DB.Save(&dbUser).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000009"})
 		return
 	}
 
@@ -114,13 +114,13 @@ func Login(c *gin.Context) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(JwtKey)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000010"})
 		return
 	}
 
 	jsonUser, err := json.Marshal(dbUser)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000011"})
 		return
 	}
 
@@ -135,25 +135,25 @@ func Login(c *gin.Context) {
 func Logout(c *gin.Context) {
 	var userRequest request_models.LogoutRequestBody
 	if err := c.BindJSON(&userRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_000012"})
 		return
 	}
 
 	var dbUser models.User
 	if err := database.DB.Where("email = ?", userRequest.Email).First(&dbUser).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error_code": "api_error_401_000013"})
 		return
 	}
 
 	if dbUser.Password != userRequest.Password {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error_code": "api_error_401_000033"})
 		return
 	}
 
 	// set device token
 	dbUser.DeviceToken = ""
 	if err := database.DB.Save(&dbUser).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000014"})
 		return
 	}
 

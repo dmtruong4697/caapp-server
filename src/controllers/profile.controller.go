@@ -16,13 +16,13 @@ func GetProfileInfo(c *gin.Context) {
 
 	var dbUser db_models.User
 	if err := database.DB.Where("id = ?", userID).First(&dbUser).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error_code": "api_error_401_000015"})
 		return
 	}
 
 	jsonUser, err := json.Marshal(dbUser)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000016"})
 		return
 	}
 

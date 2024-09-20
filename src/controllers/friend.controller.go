@@ -17,13 +17,13 @@ import (
 func GetFriendRequest(c *gin.Context) {
 	var req request_models.GetFriendRequestRequest
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to decode request id info"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_000017"})
 		return
 	}
 
 	var friendRequest db_models.FriendRequest
 	if err := database.DB.First(&friendRequest, req.ID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Friend request not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error_code": "api_error_404_000018"})
 		return
 	}
 
@@ -67,7 +67,7 @@ func CreateFriendRequest(c *gin.Context) {
 
 	var req request_models.CreateFriendRequestRequest
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to decode user info"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_000019"})
 		return
 	}
 
@@ -78,7 +78,7 @@ func CreateFriendRequest(c *gin.Context) {
 	}
 
 	if err := database.DB.Save(&friend_request).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create friend request"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000020"})
 		return
 	}
 
@@ -90,13 +90,13 @@ func AcceptFriendRequest(c *gin.Context) {
 
 	var req request_models.AcceptFriendRequestRequest
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to decode request info"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_000021"})
 		return
 	}
 
 	var friendRequest db_models.FriendRequest
 	if err := database.DB.First(&friendRequest, req.ID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Friend request not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error_code": "api_error_404_000022"})
 		return
 	}
 
@@ -107,12 +107,12 @@ func AcceptFriendRequest(c *gin.Context) {
 	}
 
 	if err := database.DB.Create(&friend).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create friend"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000023"})
 		return
 	}
 
 	if err := database.DB.Delete(&friendRequest).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete friend request"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000024"})
 		return
 	}
 
@@ -124,23 +124,23 @@ func RejectFriendRequest(c *gin.Context) {
 
 	var req request_models.RefuseFriendRequestRequest
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to decode request info"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_000025"})
 		return
 	}
 
 	var friendRequest db_models.FriendRequest
 	if err := database.DB.First(&friendRequest, req.ID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Friend request not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "api_error_404_000026"})
 		return
 	}
 
 	if friendRequest.ReceiverID != currentUserID {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "You are not authorized to reject this friend request"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error_code": "api_error_401_000027"})
 		return
 	}
 
 	if err := database.DB.Delete(&friendRequest).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reject friend request"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000028"})
 		return
 	}
 
@@ -152,23 +152,23 @@ func DeleteFriendRequest(c *gin.Context) {
 
 	var req request_models.DeleteFriendRequestRequest
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to decode request info"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_000029"})
 		return
 	}
 
 	var friendRequest db_models.FriendRequest
 	if err := database.DB.First(&friendRequest, req.ID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Friend request not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error_code": "api_error_404_000030"})
 		return
 	}
 
 	if friendRequest.SenderID != currentUserID {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "You are not authorized to delete this friend request"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error_code": "api_error_401_000031"})
 		return
 	}
 
 	if err := database.DB.Delete(&friendRequest).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete friend request"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000032"})
 		return
 	}
 
@@ -191,7 +191,7 @@ func GetSuggestUser(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func GetAllFriend(c *gin.Context) {
+func GetAllMyFriend(c *gin.Context) {
 	currentUserID := c.MustGet("id").(uint)
 
 	var friends []db_models.Friend
@@ -201,7 +201,20 @@ func GetAllFriend(c *gin.Context) {
 		currentUserID,
 	).Find(&friends)
 
-	c.JSON(http.StatusOK, friends)
+	var res responce_models.GetAllMyFriendResponce
+	res.Friends = make([]responce_models.GetUserInfoResponce, len(friends))
+
+	for i := range friends {
+		var friendId uint
+		if currentUserID == friends[i].FirstUserID {
+			friendId = friends[i].SecondUserID
+		} else {
+			friendId = friends[i].FirstUserID
+		}
+		res.Friends[i] = utils.GetUserInfo(currentUserID, friendId)
+	}
+
+	c.JSON(http.StatusOK, res)
 }
 
 func GetAllUserFriend(c *gin.Context) {
