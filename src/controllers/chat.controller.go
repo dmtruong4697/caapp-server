@@ -2,6 +2,7 @@ package controllers
 
 import (
 	db_models "caapp-server/src/models/db_models"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -10,6 +11,8 @@ import (
 )
 
 var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
@@ -40,35 +43,43 @@ func HandleConnections(c *gin.Context) {
 	}
 	channels[channelID][ws] = true
 
+	// Lắng nghe tin nhắn từ client và gửi vào kênh broadcast
 	for {
 		var msg db_models.Message
 		err := ws.ReadJSON(&msg)
 		if err != nil {
+			log.Printf("error: %v", err)
 			delete(channels[channelID], ws)
+			if len(channels[channelID]) == 0 {
+				delete(channels, channelID)
+			}
 			break
 		}
 
-		for client := range channels[channelID] {
-			err := client.WriteJSON(msg)
-			if err != nil {
-				client.Close()
-				delete(channels[channelID], client)
-			}
-		}
+		// Thêm ChannelID cho message để xác định channel
+		msg.ChannelID = uint(channelID)
+
+		// Gửi tin nhắn vào kênh broadcast
+		broadcast <- msg
 	}
 }
 
 func HandleMessages() {
 	for {
+		// Lấy tin nhắn từ kênh broadcast
 		msg := <-broadcast
-
 		channelID64 := uint64(msg.ChannelID)
 
+		// Gửi tin nhắn tới tất cả các client trong channel tương ứng
 		for client := range channels[channelID64] {
 			err := client.WriteJSON(msg)
 			if err != nil {
+				log.Printf("error: %v", err)
 				client.Close()
 				delete(channels[channelID64], client)
+				if len(channels[channelID64]) == 0 {
+					delete(channels, channelID64)
+				}
 			}
 		}
 	}

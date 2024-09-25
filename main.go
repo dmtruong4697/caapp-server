@@ -1,9 +1,9 @@
 package main
 
 import (
+	"caapp-server/src/controllers"
 	"caapp-server/src/database"
 	"caapp-server/src/routes"
-	"caapp-server/src/controllers"
 	"log"
 	"net/http"
 	"os"
