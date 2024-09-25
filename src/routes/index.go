@@ -19,5 +19,8 @@ func SetupRouter() *gin.Engine {
 	// Friend routes
 	SetupFriendRoutes(r)
 
+	// Chat routes
+	SetupChatRoutes(r)
+
 	return r
 }
