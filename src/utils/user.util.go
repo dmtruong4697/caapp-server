@@ -15,9 +15,10 @@ func GetUserInfo(current_user_id uint, user_id uint) responce_models.GetUserInfo
 	}
 
 	var friend db_models.Friend
-	if err := database.DB.Where("(first_user_id = ? AND second_user_id = ?) OR (second_user_id = ? AND first_user_id = ?)", current_user_id, user_id, user_id, current_user_id).First(&friend).Error; err != nil {
-		// return responce_models.GetUserInfoResponce{}
-	}
+	database.DB.Where("(first_user_id = ? AND second_user_id = ?) OR (second_user_id = ? AND first_user_id = ?)", current_user_id, user_id, user_id, current_user_id).First(&friend)
+
+	var request db_models.FriendRequest
+	database.DB.Where("(sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)", current_user_id, user_id, user_id, current_user_id).First(&request)
 
 	var responce responce_models.GetUserInfoResponce
 	responce.ID = int(dbUser.ID)
@@ -42,6 +43,7 @@ func GetUserInfo(current_user_id uint, user_id uint) responce_models.GetUserInfo
 	responce.LastActive = dbUser.LastActive
 	responce.LastUpdate = dbUser.LastUpdate
 	responce.Friend = friend
+	responce.Request = request
 
 	return responce
 }

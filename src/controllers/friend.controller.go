@@ -39,6 +39,8 @@ func GetAllFriendRequestReceived(c *gin.Context) {
 	database.DB.Where("receiver_id = ?", currentUserID).Find(&requests)
 
 	var res responce_models.GetListFriendRequestReceivedResponce
+	res.Requests = make([]responce_models.GetListFriendRequestReceivedResponceItem, len(requests))
+
 	for i := range requests {
 		res.Requests[i].User = utils.GetUserInfo(currentUserID, requests[i].SenderID)
 		res.Requests[i].FriendRequest = requests[i]

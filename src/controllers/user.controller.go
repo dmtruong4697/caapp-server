@@ -26,7 +26,9 @@ func GetUserInfo(c *gin.Context) {
 	}
 
 	var friend db_models.Friend
-	database.DB.Where("(sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)", currentUserID, userID, userID, currentUserID).First(&friend)
+	database.DB.Where("(first_user_id = ? AND second_user_id = ?) OR (second_user_id = ? AND first_user_id = ?)", currentUserID, userID, userID, currentUserID).First(&friend)
+	var request db_models.FriendRequest
+	database.DB.Where("(sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)", currentUserID, userID, userID, currentUserID).First(&request)
 
 	response := response_models.GetUserInfoResponce{
 		ID:                 int(dbUser.ID),
@@ -51,6 +53,7 @@ func GetUserInfo(c *gin.Context) {
 		LastActive:         dbUser.LastActive,
 		LastUpdate:         dbUser.LastUpdate,
 		Friend:             friend,
+		Request:            request,
 	}
 
 	c.JSON(http.StatusOK, response)
