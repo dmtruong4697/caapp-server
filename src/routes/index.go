@@ -22,5 +22,8 @@ func SetupRouter() *gin.Engine {
 	// Chat routes
 	SetupChatRoutes(r)
 
+	// Channel routes
+	SetupChannelRoutes(r)
+
 	return r
 }
