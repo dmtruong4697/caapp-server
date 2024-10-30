@@ -16,3 +16,7 @@ type GetChannelListRequest struct {
 type CheckFriendChannelRequest struct {
 	UserID uint `json:"user_id"`
 }
+
+type GetChannelChatHistoryRequest struct {
+	ChannelID uint `json:"channel_id"`
+}

@@ -28,3 +28,13 @@ type GetGroupChannelInfoResponce struct {
 	Channel models.Channel        `json:"channel"`
 	Users   []GetUserInfoResponce `json:"users"`
 }
+
+type GetChannelChatHistoryItem struct {
+	Sender  GetUserInfoResponce `json:"sender"`
+	Message models.Message      `json:"message"`
+	Media   []models.Media      `json:"media"`
+}
+
+type GetChannelChatHistoryResponce struct {
+	Messages []GetChannelChatHistoryItem `json:"messages"`
+}

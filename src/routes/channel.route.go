@@ -14,5 +14,6 @@ func SetupChannelRoutes(r *gin.Engine) {
 		channelRoutes.POST("/check-friend-channel", middlewares.AuthMiddleware(), controllers.CheckFriendchannel)
 		channelRoutes.POST("/friend-channel-info", middlewares.AuthMiddleware(), controllers.GetFriendChannelInfo)
 		channelRoutes.POST("/group-channel-info", middlewares.AuthMiddleware(), controllers.GetGroupChannelInfo)
+		channelRoutes.POST("/chat-history", middlewares.AuthMiddleware(), controllers.GetChannelChatHistory)
 	}
 }
