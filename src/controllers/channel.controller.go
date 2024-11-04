@@ -221,12 +221,15 @@ func GetChannelChatHistory(c *gin.Context) {
 	}
 
 	var messages []db_models.Message
-	if err := database.DB.Where("channel_id = ?", req.ChannelID).Find(&messages).Error; err != nil {
-		// c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch messages"})
-		// return
+	if err := database.DB.Where("channel_id = ?", req.ChannelID).Order("create_at DESC").Find(&messages).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch messages"})
+		return
 	}
 
 	var channelMessage responce_models.GetChannelChatHistoryResponce
+
+	channelMessage.Messages = make([]responce_models.GetChannelChatHistoryItem, len(messages))
+
 	for i := range messages {
 		var medias []db_models.Media
 		if err := database.DB.Where("message_id = ?", messages[i].ID).Find(&medias).Error; err != nil {

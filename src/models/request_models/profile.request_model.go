@@ -22,3 +22,7 @@ type UpdatedProfileRequest struct {
 type UpdatedPaswordRequest struct {
 	Password string `json:"password"`
 }
+
+type GetProfileInfoRequest struct {
+	ID uint `json:"id"`
+}

@@ -4,7 +4,7 @@ import (
 	"caapp-server/src/database"
 	db_models "caapp-server/src/models/db_models"
 	request_models "caapp-server/src/models/request_models"
-	"encoding/json"
+	responce_models "caapp-server/src/models/responce_models"
 	"net/http"
 	"time"
 
@@ -12,6 +12,12 @@ import (
 )
 
 func GetProfileInfo(c *gin.Context) {
+
+	// var req request_models.GetProfileInfoRequest
+	// if err := c.BindJSON(&req); err != nil {
+	// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to decode request info"})
+	// 	return
+	// }
 	userID := c.MustGet("id").(uint)
 
 	var dbUser db_models.User
@@ -20,17 +26,10 @@ func GetProfileInfo(c *gin.Context) {
 		return
 	}
 
-	jsonUser, err := json.Marshal(dbUser)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000016"})
-		return
-	}
+	var res responce_models.GetProfileInfoResponce
+	res.Profile = dbUser
 
-	responseData := map[string]interface{}{
-		"profile": string(jsonUser),
-	}
-
-	c.JSON(http.StatusOK, responseData)
+	c.JSON(http.StatusOK, res)
 }
 
 func UpdateProfileInfo(c *gin.Context) {
