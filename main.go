@@ -4,6 +4,7 @@ import (
 	"caapp-server/src/controllers"
 	"caapp-server/src/database"
 	"caapp-server/src/routes"
+	"caapp-server/src/ws"
 	"log"
 	"net/http"
 	"os"
@@ -21,6 +22,7 @@ func main() {
 	database.Connect()
 
 	go controllers.HandleMessages()
+	go ws.HandleChatListMessages()
 
 	r := routes.SetupRouter()
 

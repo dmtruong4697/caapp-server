@@ -5,9 +5,10 @@ import (
 )
 
 type GetChannelListResponceItem struct {
-	Channel           models.Channel
-	LastMessage       models.Message
-	LastMessageSender GetUserInfoResponce
+	Channel           models.Channel        `json:"channel"`
+	Users             []GetUserInfoResponce `json:"users"`
+	LastMessage       models.Message        `json:"last_message"`
+	LastMessageSender GetUserInfoResponce   `json:"last_message_sender"`
 }
 
 type GetChannelListResponce struct {

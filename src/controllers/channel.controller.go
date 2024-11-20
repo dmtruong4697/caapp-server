@@ -24,28 +24,67 @@ func GetChannelList(c *gin.Context) {
 		return
 	}
 
+	// query := `
+	// 	SELECT channels.*
+	// 	FROM channels
+	// 	JOIN channel_members ON channels.id = channel_members.channel_id
+	// 	WHERE channel_members.user_id = ?
+	// 	LIMIT ?
+	// 	OFFSET ?
+	// `
+	// var channels []db_models.Channel
+	// err := database.DB.Select(&channels, query, currentUserID, getChannelListRequest.Limit, getChannelListRequest.Offset)
+	// if err != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve channels"})
+	// 	return
+	// }
+
 	query := `
 		SELECT channels.*
 		FROM channels
-		JOIN channel_members ON channels.id = channel_members.channel_id
-		WHERE channel_members.user_id = ?
-		LIMIT ?
-		OFFSET ?;
+		WHERE EXISTS (
+			SELECT 1
+			FROM channel_members
+			WHERE channel_members.channel_id = channels.id
+			AND channel_members.user_id = ?
+		)
 	`
 	var channels []db_models.Channel
-	err := database.DB.Select(&channels, query, currentUserID, getChannelListRequest.Limit, getChannelListRequest.Offset)
+	err := database.DB.Raw(query, currentUserID).Scan(&channels).Error
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve channels"})
-		return
+		// c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve channels"})
+		// return
 	}
 
 	var res response_models.GetChannelListResponce
+	res.Channels = make([]response_models.GetChannelListResponceItem, len(channels))
 	for i := range channels {
 		var lastMessage db_models.Message
 		if err := database.DB.Where("id = ?", channels[i].LastMessageID).First(&lastMessage).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "message not found"})
 			return
 		}
+
+		// query all channel member info
+		// query := `
+		// 	SELECT *
+		// 	FROM channel_members
+		// 	WHERE channel_id = ?
+		// 	AND user_id != ?;
+		// `
+
+		var channelMembers []db_models.ChannelMember
+		err := database.DB.Where("channel_id = ?", channels[i].ID).Find(&channelMembers).Error
+		if err != nil {
+			// c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve channels"})
+			// return
+		}
+
+		res.Channels[i].Users = make([]responce_models.GetUserInfoResponce, len(channelMembers))
+		for j := range channelMembers {
+			res.Channels[i].Users[j] = utils.GetUserInfo(currentUserID, channelMembers[j].UserID)
+		}
+		//
 
 		res.Channels[i].Channel = channels[i]
 		res.Channels[i].LastMessage = lastMessage

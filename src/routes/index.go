@@ -1,6 +1,8 @@
 package routes
 
 import (
+	wsroutes "caapp-server/src/routes/ws.routes"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,6 +26,8 @@ func SetupRouter() *gin.Engine {
 
 	// Channel routes
 	SetupChannelRoutes(r)
+
+	wsroutes.SetupWSChatListRoutes(r)
 
 	return r
 }

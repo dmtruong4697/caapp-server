@@ -1,79 +1,151 @@
 package controllers
 
 import (
-	"encoding/json"
+	"errors"
 	"net/http"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 
 	"caapp-server/src/database"
-	"caapp-server/src/enums"
-	models "caapp-server/src/models/db_models"
+	db_models "caapp-server/src/models/db_models"
 	request_models "caapp-server/src/models/request_models"
+	responce_models "caapp-server/src/models/responce_models"
 	utils "caapp-server/src/utils"
 )
 
 var JwtKey = []byte("20204697")
 
 func Register(c *gin.Context) {
-	var user models.User
-	if err := c.BindJSON(&user); err != nil {
+	var req request_models.RegisterRequest
+	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	existingUser := models.User{}
-	if err := database.DB.Where("email = ?", user.Email).First(&existingUser).Error; err == nil {
+	existingUser := db_models.User{}
+	if err := database.DB.Where("email = ?", req.Email).First(&existingUser).Error; err == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_401_000002"})
 		return
 	}
 
-	validateCode := utils.GenerateRandomCode(6)
-	user.ValidateCode = validateCode
-	user.AccountStatus = string(enums.USER_ACCOUNT_STATUS_NOT_ACTIVE)
+	var emailValidateCode db_models.EmailValidateCode
 
-	if err := database.DB.Create(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_400_000003"})
-		return
-	}
+	if err := database.DB.Where("email = ?", req.Email).First(&emailValidateCode).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			validateCode := utils.GenerateRandomCode(6)
+			newEmailValidateCode := db_models.EmailValidateCode{
+				Email:        req.Email,
+				ValidateCode: validateCode,
+				CreateAt:     time.Now(),
+				ExpireAt:     time.Now().Add(5 * time.Minute),
+			}
+			if createErr := database.DB.Create(&newEmailValidateCode).Error; createErr != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_401_xxxxxx"})
+				return
+			}
 
-	// send email with validate code
-	header := "Validate Your Email"
-	body := "Validate code:" + validateCode
-	utils.SendEmail(user.Email, header, body)
+			//send email with validate code
+			header := "Validate Your Email"
+			body := "Validate code:" + validateCode
+			utils.SendEmail(req.Email, header, body)
+		} else {
+			// Xử lý các lỗi khác ngoài ErrRecordNotFound
+			c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_401_xxxxxx"})
+		}
+	} else {
+		emailValidateCode.ValidateCode = utils.GenerateRandomCode(6)
+		emailValidateCode.CreateAt = time.Now()
+		emailValidateCode.ExpireAt = time.Now().Add(5 * time.Minute)
 
-	c.JSON(http.StatusCreated, user)
-}
-
-func ValidateEmail(c *gin.Context) {
-	var validateEmailRequestBody request_models.ValidateEmailRequestBody
-	if err := c.BindJSON(&validateEmailRequestBody); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_000004"})
-		return
-	}
-
-	var dbUser models.User
-	if err := database.DB.Where("email = ?", validateEmailRequestBody.Email).First(&dbUser).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error_code": "api_error_401_000005"})
-		return
-	}
-
-	if dbUser.ValidateCode == validateEmailRequestBody.ValidateCode {
-		dbUser.AccountStatus = string(enums.USER_ACCOUNT_STATUS_ACTIVE)
-		dbUser.ValidateCode = ""
-
-		if err := database.DB.Save(&dbUser).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000006"})
+		if updateErr := database.DB.Save(&emailValidateCode).Error; updateErr != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_401_xxxxxx"})
 			return
 		}
 
-		message := "Email validation successful. Your account has been validated."
-		c.JSON(http.StatusOK, gin.H{"message": message})
-	} else {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_401_000007"})
+		//send email with validate code
+		header := "Validate Your Email"
+		body := "Validate code:" + emailValidateCode.ValidateCode
+		utils.SendEmail(req.Email, header, body)
 	}
+
+	c.JSON(http.StatusOK, gin.H{})
+}
+
+func ResendValidateCode(c *gin.Context) {
+	var req request_models.ResendValidateCodeRequest
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "loi lay request"})
+		return
+	}
+
+	var emailValidateCode db_models.EmailValidateCode
+
+	if err := database.DB.Where("email = ?", req.Email).First(&emailValidateCode).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "loi tim kiem ban ghi"})
+		return
+	}
+
+	emailValidateCode.ValidateCode = utils.GenerateRandomCode(6)
+	emailValidateCode.CreateAt = time.Now()
+	emailValidateCode.ExpireAt = time.Now().Add(5 * time.Minute)
+
+	if updateErr := database.DB.Save(&emailValidateCode).Error; updateErr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "loi cap nhat ban ghi email validate code"})
+		return
+	}
+
+	//send email with validate code
+	header := "Validate Your Email"
+	body := "Validate code:" + emailValidateCode.ValidateCode
+	utils.SendEmail(req.Email, header, body)
+
+	c.JSON(http.StatusOK, gin.H{})
+}
+
+func ValidateEmail(c *gin.Context) {
+	var req request_models.ValidateEmailRequest
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_xxxxxx"})
+		return
+	}
+
+	emailValidateCode := db_models.EmailValidateCode{}
+	if err := database.DB.Where("email = ?", req.Email).First(&emailValidateCode).Error; err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "khong tim thay email tuong ung"})
+		return
+	}
+
+	if emailValidateCode.ValidateCode != req.ValidateCode {
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "sai ma xac thuc"})
+		return
+	}
+
+	// kiem tra validate con hieu luc
+	if emailValidateCode.ExpireAt.Before(time.Now()) {
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "validate code het thoi han"})
+		return
+	}
+
+	var newUser db_models.User
+	newUser.Email = req.Email
+	newUser.Password = req.Password
+	newUser.AccountStatus = "0"
+
+	if err := database.DB.Create(&newUser).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "loi tao moi nguoi dung vao db"})
+		return
+	}
+
+	// Xóa bản ghi emailValidateCode
+	if err := database.DB.Delete(&emailValidateCode).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "loi_xoa_email_validate_code"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{})
 }
 
 func Login(c *gin.Context) {
@@ -83,7 +155,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	var dbUser models.User
+	var dbUser db_models.User
 	if err := database.DB.Where("email = ?", userRequest.Email).First(&dbUser).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error_code": "api_error_401_000001"})
 		return
@@ -118,18 +190,22 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	jsonUser, err := json.Marshal(dbUser)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000011"})
-		return
-	}
+	// jsonUser, err := json.Marshal(dbUser)
+	// if err != nil {
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000011"})
+	// 	return
+	// }
 
-	responseData := map[string]interface{}{
-		"token":   tokenString,
-		"profile": string(jsonUser),
-	}
+	// responseData := map[string]interface{}{
+	// 	"token":   tokenString,
+	// 	"profile": string(jsonUser),
+	// }
 
-	c.JSON(http.StatusOK, responseData)
+	var res responce_models.LoginResponse
+	res.UserID = dbUser.ID
+	res.Token = tokenString
+
+	c.JSON(http.StatusOK, res)
 }
 
 func Logout(c *gin.Context) {
@@ -139,7 +215,7 @@ func Logout(c *gin.Context) {
 		return
 	}
 
-	var dbUser models.User
+	var dbUser db_models.User
 	if err := database.DB.Where("email = ?", userRequest.Email).First(&dbUser).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error_code": "api_error_401_000013"})
 		return

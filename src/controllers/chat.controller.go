@@ -4,7 +4,10 @@ import (
 	"caapp-server/src/database"
 	db_models "caapp-server/src/models/db_models"
 	responce_models "caapp-server/src/models/responce_models"
+	wsmodels "caapp-server/src/models/ws_models"
 	utils "caapp-server/src/utils"
+	"caapp-server/src/utils/helper"
+	ws "caapp-server/src/ws"
 	"log"
 	"net/http"
 	"strconv"
@@ -23,7 +26,16 @@ var upgrader = websocket.Upgrader{
 }
 
 var channels = make(map[uint64]map[*websocket.Conn]bool)
+var chatListChannels = make(map[string]map[*websocket.Conn]bool)
 var broadcast = make(chan responce_models.GetChannelChatHistoryItem)
+
+func SendToChannelList(userID string, msg wsmodels.WSChannelListItemForBroadcast) {
+	msgForHandleMessage := wsmodels.WSChannelListItemForHandleMessage{
+		Data:                     msg,
+		UserIDForMakingChannelID: userID,
+	}
+	ws.SendToBroadcast(msgForHandleMessage) // Đẩy tin nhắn vào broadcast của kết nối B
+}
 
 func HandleConnections(c *gin.Context) {
 	channelIDStr := c.Query("channel_id")
@@ -41,13 +53,29 @@ func HandleConnections(c *gin.Context) {
 	}
 	defer ws.Close()
 
-	// Khởi tạo channel nếu chưa tồn tại
+	// ket noi toi channel chat chinh
 	if channels[channelID] == nil {
 		channels[channelID] = make(map[*websocket.Conn]bool)
 	}
 	channels[channelID][ws] = true
+	//////////////////////////////////////////////
 
-	// Lắng nghe tin nhắn từ client và gửi vào kênh broadcast
+	// ket noi toi cac chat list channel
+	var channelMembers []db_models.ChannelMember
+	database.DB.Where(
+		"(channel_id = ?)",
+		channelID,
+	).Find(&channelMembers)
+
+	for i := range channelMembers {
+		chatListChannelID := helper.UIntToString(channelMembers[i].UserID) + "-ChatListChannel"
+		if chatListChannels[chatListChannelID] == nil {
+			chatListChannels[chatListChannelID] = make(map[*websocket.Conn]bool)
+		}
+		chatListChannels[chatListChannelID][ws] = true
+	}
+	/////////
+
 	for {
 		var msg db_models.Message
 		err := ws.ReadJSON(&msg)
@@ -70,22 +98,76 @@ func HandleConnections(c *gin.Context) {
 			// return
 		}
 
+		var channel db_models.Channel
+		if err := database.DB.Where("id = ?", msg.ChannelID).First(&channel).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error_code": ""})
+			return
+		}
+
+		channel.LastMessageID = msg.ID
+		if err := database.DB.Save(&channel).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error_code": ""})
+			return
+		}
+
 		var msgDetail responce_models.GetChannelChatHistoryItem
 		msgDetail.Message = msg
 		msgDetail.Sender = utils.GetProfileInfo(msg.SenderID)
 
-		// Gửi tin nhắn vào kênh broadcast
+		for _, member := range channelMembers {
+			// chatListChannelID := helper.UIntToString(channelMembers[i].UserID) + "-ChatListChannel"
+			// var msg wsmodels.WSChannelListItemForListening
+
+			// msg.ChannelID = msgDetail.Message.ChannelID
+			// msg.Message = msgDetail.Message
+
+			var msgForBroadcast wsmodels.WSChannelListItemForBroadcast
+			msgForBroadcast.Channel = utils.GetChannelInfo(msgDetail.Message.ChannelID)
+
+			var lastMessage db_models.Message
+			if err := database.DB.Where("id = ?", msgForBroadcast.Channel.LastMessageID).First(&lastMessage).Error; err != nil {
+
+			}
+			msgForBroadcast.LastMessage = lastMessage
+			msgForBroadcast.LastMessageSender = utils.GetUserInfo(msg.SenderID, msgForBroadcast.LastMessage.SenderID)
+
+			// query all channel member info
+			// query := `
+			// 	SELECT *
+			// 	FROM channel_members
+			// 	WHERE channel_id = ?
+			// 	AND user_id != ?;
+			// `
+
+			var channelMembers []db_models.ChannelMember
+			err := database.DB.Where("channel_id = ?", msgDetail.Message.ChannelID).Find(&channelMembers).Error
+			if err != nil {
+				// c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve channels"})
+				// return
+			}
+
+			msgForBroadcast.Users = make([]responce_models.GetUserInfoResponce, len(channelMembers))
+			for j := range channelMembers {
+				msgForBroadcast.Users[j] = utils.GetUserInfo(member.UserID, channelMembers[j].UserID)
+			}
+			SendToChannelList(helper.UIntToString(member.UserID), msgForBroadcast)
+		}
+
 		broadcast <- msgDetail
 	}
 }
 
 func HandleMessages() {
 	for {
-		// Lấy tin nhắn từ kênh broadcast
 		msgDetail := <-broadcast
 		channelID64 := uint64(msgDetail.Message.ChannelID)
 
-		// Gửi tin nhắn tới tất cả các client trong channel tương ứng
+		var channelMembers []db_models.ChannelMember
+		database.DB.Where(
+			"(channel_id = ?)",
+			msgDetail.Message.ChannelID,
+		).Find(&channelMembers)
+
 		for client := range channels[channelID64] {
 			err := client.WriteJSON(msgDetail)
 			if err != nil {
@@ -97,5 +179,55 @@ func HandleMessages() {
 				}
 			}
 		}
+
+		// for i := range channelMembers {
+		// 	chatListChannelID := helper.UIntToString(channelMembers[i].UserID) + "-ChatListChannel"
+		// 	// var msg wsmodels.WSChannelListItemForListening
+
+		// 	// msg.ChannelID = msgDetail.Message.ChannelID
+		// 	// msg.Message = msgDetail.Message
+
+		// 	var msgForBroadcast wsmodels.WSChannelListItemForBroadcast
+		// 	msgForBroadcast.Channel = utils.GetChannelInfo(msgDetail.Message.ChannelID)
+
+		// 	var lastMessage db_models.Message
+		// 	if err := database.DB.Where("id = ?", msgForBroadcast.Channel.LastMessageID).First(&lastMessage).Error; err != nil {
+
+		// 	}
+		// 	msgForBroadcast.LastMessage = lastMessage
+		// 	msgForBroadcast.LastMessageSender = utils.GetUserInfo(1, msgForBroadcast.LastMessage.SenderID)
+
+		// 	// query all channel member info
+		// 	query := `
+		// 		SELECT *
+		// 		FROM channel_members
+		// 		WHERE channel_id = ?
+		// 		AND user_id != ?;
+		// 	`
+
+		// 	var channelMembers []db_models.ChannelMember
+		// 	err := database.DB.Raw(query, msgDetail.Message.ChannelID, 1).Scan(&channelMembers).Error
+		// 	if err != nil {
+		// 		// c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve channels"})
+		// 		// return
+		// 	}
+
+		// 	msgForBroadcast.Users = make([]responce_models.GetUserInfoResponce, len(channelMembers))
+		// 	for j := range channelMembers {
+		// 		msgForBroadcast.Users[j] = utils.GetUserInfo(1, msgForBroadcast.LastMessage.SenderID)
+		// 	}
+
+		// 	for chatListClient := range chatListChannels[chatListChannelID] {
+		// 		err := chatListClient.WriteJSON(msgForBroadcast)
+		// 		if err != nil {
+		// 			log.Printf("error: %v", err)
+		// 			chatListClient.Close()
+		// 			delete(chatListChannels[chatListChannelID], chatListClient)
+		// 			if len(chatListChannels[chatListChannelID]) == 0 {
+		// 				delete(chatListChannels, chatListChannelID)
+		// 			}
+		// 		}
+		// 	}
+		// }
 	}
 }
