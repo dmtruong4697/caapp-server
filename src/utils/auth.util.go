@@ -7,7 +7,7 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
-const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+const letterBytes = "1234567890"
 
 func GenerateRandomCode(n int) string {
 	b := make([]byte, n)

@@ -113,13 +113,8 @@ func ValidateEmail(c *gin.Context) {
 	}
 
 	emailValidateCode := db_models.EmailValidateCode{}
-	if err := database.DB.Where("email = ?", req.Email).First(&emailValidateCode).Error; err == nil {
+	if err := database.DB.Where("email = ?", req.Email).First(&emailValidateCode).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error_code": "khong tim thay email tuong ung"})
-		return
-	}
-
-	if emailValidateCode.ValidateCode != req.ValidateCode {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "sai ma xac thuc"})
 		return
 	}
 
@@ -129,10 +124,19 @@ func ValidateEmail(c *gin.Context) {
 		return
 	}
 
+	if emailValidateCode.ValidateCode != req.ValidateCode {
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "sai ma xac thuc"})
+		return
+	}
+
 	var newUser db_models.User
 	newUser.Email = req.Email
 	newUser.Password = req.Password
 	newUser.AccountStatus = "0"
+	newUser.DateOfBirth = time.Now()
+	newUser.CreateAt = time.Now()
+	newUser.LastActive = time.Now()
+	newUser.LastUpdate = time.Now()
 
 	if err := database.DB.Create(&newUser).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "loi tao moi nguoi dung vao db"})
