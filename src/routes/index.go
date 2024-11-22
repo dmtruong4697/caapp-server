@@ -27,6 +27,9 @@ func SetupRouter() *gin.Engine {
 	// Channel routes
 	SetupChannelRoutes(r)
 
+	// Constant Data routes
+	SetupConstantDataRoutes(r)
+
 	wsroutes.SetupWSChatListRoutes(r)
 
 	return r

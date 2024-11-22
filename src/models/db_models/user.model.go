@@ -13,7 +13,7 @@ type User struct {
 	DateOfBirth        time.Time `json:"date_of_birth"`
 	HashtagName        string    `json:"hashtag_name"`
 	Gender             string    `json:"gender"`
-	Language           string    `json:"language"`
+	Language           string    `json:"language"` //su dung language code
 	Country            string    `json:"country"`
 	ProfileDescription string    `json:"profile_description"`
 	AvatarImage        string    `json:"avatar_image"`

@@ -100,3 +100,11 @@ func UpdatePassword(c *gin.Context) {
 
 	c.JSON(http.StatusOK, dbUser)
 }
+
+func FirstUpdateProfileInfo(c *gin.Context) {
+
+}
+
+func CheckDuplicateHashtagName(c *gin.Context) {
+
+}
