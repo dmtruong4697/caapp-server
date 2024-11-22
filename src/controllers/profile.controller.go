@@ -5,10 +5,12 @@ import (
 	db_models "caapp-server/src/models/db_models"
 	request_models "caapp-server/src/models/request_models"
 	responce_models "caapp-server/src/models/responce_models"
+	"errors"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func GetProfileInfo(c *gin.Context) {
@@ -106,5 +108,25 @@ func FirstUpdateProfileInfo(c *gin.Context) {
 }
 
 func CheckDuplicateHashtagName(c *gin.Context) {
+	var req request_models.CheckDuplicateHashtagNameRequest
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "loi lay request"})
+		return
+	}
 
+	var res responce_models.CheckDuplicateHashtagNameResponse
+
+	var existingUser db_models.User
+	if err := database.DB.Where("hashtag_name = ?", req.HashtagName).First(&existingUser).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			res.IsAvailableHashtagName = true
+		} else {
+			// Xử lý các lỗi khác ngoài ErrRecordNotFound
+			c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_401_xxxxxx"})
+		}
+	} else {
+		res.IsAvailableHashtagName = false
+	}
+
+	c.JSON(http.StatusOK, res)
 }

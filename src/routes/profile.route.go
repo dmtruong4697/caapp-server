@@ -11,5 +11,6 @@ func SetupProfileRoutes(r *gin.Engine) {
 	profileRoutes := r.Group("/profile")
 	{
 		profileRoutes.POST("/profile-info", middlewares.AuthMiddleware(), controllers.GetProfileInfo)
+		profileRoutes.POST("/check-duplicate-hashtag-name", controllers.CheckDuplicateHashtagName)
 	}
 }

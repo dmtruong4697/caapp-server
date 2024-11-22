@@ -38,3 +38,7 @@ type FirstUpdateProfileInfoRequest struct {
 	Country     string    `json:"country"`
 	Language    string    `json:"language"`
 }
+
+type CheckDuplicateHashtagNameRequest struct {
+	HashtagName string `json:"hashtag_name"`
+}

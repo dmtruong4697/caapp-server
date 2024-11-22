@@ -21,7 +21,7 @@ var JwtKey = []byte("20204697")
 func Register(c *gin.Context) {
 	var req request_models.RegisterRequest
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "loi lay request"})
 		return
 	}
 
