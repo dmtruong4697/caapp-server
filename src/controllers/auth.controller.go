@@ -149,7 +149,28 @@ func ValidateEmail(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{})
+	// create JWT token
+	expirationTime := time.Now().Add(24 * time.Hour)
+	claims := &request_models.LoginClaims{
+		ID:    newUser.ID,
+		Email: newUser.Email,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: expirationTime.Unix(),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(JwtKey)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000010"})
+		return
+	}
+
+	var res responce_models.LoginResponse
+	res.UserID = newUser.ID
+	res.Token = tokenString
+
+	c.JSON(http.StatusOK, res)
 }
 
 func Login(c *gin.Context) {

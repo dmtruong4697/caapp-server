@@ -104,6 +104,34 @@ func UpdatePassword(c *gin.Context) {
 }
 
 func FirstUpdateProfileInfo(c *gin.Context) {
+	currentUserID := c.MustGet("id").(uint)
+
+	var req request_models.FirstUpdateProfileInfoRequest
+	if err := c.BindJSON((&req)); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "loi lay request"})
+	}
+
+	var user db_models.User
+	if err := database.DB.Where("id = ?", currentUserID).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+	}
+
+	user.FirstName = req.FirstName
+	user.MiddleName = req.MiddleName
+	user.LastName = req.LastName
+	user.PhoneNumber = req.PhoneNumber
+	user.HashtagName = req.HashtagName
+	user.Gender = req.Gender
+	user.DateOfBirth = req.DateOfBirth
+	user.Country = req.Country
+	user.Language = req.Language
+	user.AccountStatus = "1"
+
+	if err := database.DB.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user information"})
+	}
+
+	c.JSON(http.StatusOK, gin.H{})
 
 }
 
