@@ -109,11 +109,13 @@ func FirstUpdateProfileInfo(c *gin.Context) {
 	var req request_models.FirstUpdateProfileInfoRequest
 	if err := c.BindJSON((&req)); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error_code": "loi lay request"})
+		return
 	}
 
 	var user db_models.User
 	if err := database.DB.Where("id = ?", currentUserID).First(&user).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
 	}
 
 	user.FirstName = req.FirstName
@@ -129,6 +131,7 @@ func FirstUpdateProfileInfo(c *gin.Context) {
 
 	if err := database.DB.Save(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user information"})
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{})
@@ -148,9 +151,12 @@ func CheckDuplicateHashtagName(c *gin.Context) {
 	if err := database.DB.Where("hashtag_name = ?", req.HashtagName).First(&existingUser).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			res.IsAvailableHashtagName = true
+			c.JSON(http.StatusOK, res)
+			return
 		} else {
 			// Xử lý các lỗi khác ngoài ErrRecordNotFound
 			c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_401_xxxxxx"})
+			return
 		}
 	} else {
 		res.IsAvailableHashtagName = false
