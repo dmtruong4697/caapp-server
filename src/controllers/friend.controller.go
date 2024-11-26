@@ -1,10 +1,12 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 
 	"caapp-server/src/database"
 	db_models "caapp-server/src/models/db_models"
@@ -73,18 +75,30 @@ func CreateFriendRequest(c *gin.Context) {
 		return
 	}
 
-	friend_request := db_models.FriendRequest{
-		SenderID:   currentUserID,
-		ReceiverID: req.UserID,
-		CreateAt:   time.Now(),
-	}
+	var existingFriendRequest db_models.FriendRequest
+	if err := database.DB.Where("(sender_id = ? AND receiver_id = ?) OR (receiver_id = ? AND sender_id = ?)", currentUserID, req.UserID, currentUserID, req.UserID).First(&existingFriendRequest).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			friend_request := db_models.FriendRequest{
+				SenderID:   currentUserID,
+				ReceiverID: req.UserID,
+				CreateAt:   time.Now(),
+			}
 
-	if err := database.DB.Save(&friend_request).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000020"})
+			if err := database.DB.Save(&friend_request).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000020"})
+				return
+			}
+
+			c.JSON(http.StatusOK, gin.H{})
+		} else {
+			// Xử lý các lỗi khác ngoài ErrRecordNotFound
+			c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_401_xxxxxx"})
+			return
+		}
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "friend request da ton tai"})
 		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Friend request created successfully"})
 }
 
 func AcceptFriendRequest(c *gin.Context) {
