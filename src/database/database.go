@@ -49,6 +49,8 @@ func Connect() {
 	DB.AutoMigrate(&models.Friend{})
 	DB.AutoMigrate(&models.FriendRequest{})
 	DB.AutoMigrate(&models.EmailValidateCode{})
+	DB.AutoMigrate(&models.MQueue{})
+	DB.AutoMigrate(&models.FQueue{})
 
 	fmt.Println("Connected to", dbName, "database...")
 }

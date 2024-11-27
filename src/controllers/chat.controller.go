@@ -34,7 +34,7 @@ func SendToChannelList(userID string, msg wsmodels.WSChannelListItemForBroadcast
 		Data:                     msg,
 		UserIDForMakingChannelID: userID,
 	}
-	ws.SendToBroadcast(msgForHandleMessage) // Đẩy tin nhắn vào broadcast của kết nối B
+	ws.SendToBroadcast(msgForHandleMessage)
 }
 
 func HandleConnections(c *gin.Context) {
