@@ -25,7 +25,7 @@ var upgrader = websocket.Upgrader{
 var channels = make(map[string]map[*websocket.Conn]bool)
 var broadcast = make(chan wsmodels.WSChannelListItemForHandleMessage)
 
-func SendToBroadcast(msg wsmodels.WSChannelListItemForHandleMessage) {
+func SendToChannelListBroadcast(msg wsmodels.WSChannelListItemForHandleMessage) {
 	broadcast <- msg
 }
 

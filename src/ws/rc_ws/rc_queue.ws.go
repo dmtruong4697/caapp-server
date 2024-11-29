@@ -1,7 +1,13 @@
 package rcws
 
 import (
+	"caapp-server/src/database"
+	rcdbmodels "caapp-server/src/models/db_models/rc_db_models"
+	rcwsmodels "caapp-server/src/models/ws_models/rc_ws_models"
+	"caapp-server/src/utils/helper"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -15,7 +21,16 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-var channels = make(map[string]map[*websocket.Conn]bool)
+var queueChannels = make(map[string]map[*websocket.Conn]bool)
+var broadcast = make(chan rcwsmodels.MatchingResponse)
+
+func SendToWaitingQueueBroadcast(msg rcwsmodels.MatchingResponse) {
+	broadcast <- msg
+}
+
+func GetQueueChannels() map[string]map[*websocket.Conn]bool {
+	return queueChannels
+}
 
 func HandleWaitingQueueConnections(c *gin.Context) {
 	userID := c.Query("user_id")
@@ -29,12 +44,51 @@ func HandleWaitingQueueConnections(c *gin.Context) {
 	}
 	defer ws.Close()
 
-	if channels[channelID] == nil {
-		channels[channelID] = make(map[*websocket.Conn]bool)
+	if queueChannels[channelID] == nil {
+		queueChannels[channelID] = make(map[*websocket.Conn]bool)
 	}
-	channels[channelID][ws] = true
+	queueChannels[channelID][ws] = true
 
 	for {
+		var msg rcwsmodels.RCQueueRequest
+		err := ws.ReadJSON(&msg)
+		if err != nil {
+			log.Printf("error: %v", err)
+			delete(queueChannels[channelID], ws)
+			if len(queueChannels[channelID]) == 0 {
+				delete(queueChannels, channelID)
+			}
+			break
+		}
 
+		var generalQueueUser rcdbmodels.GeneralQueueUser
+		generalQueueUser.UserID = msg.UserID
+		generalQueueUser.Gender = msg.Gender
+		generalQueueUser.TargetGender = msg.TargetGender
+		generalQueueUser.JoinAt = time.Now()
+
+		if err := database.DB.Create(&generalQueueUser).Error; err != nil {
+
+		}
+	}
+}
+
+func HandleWaitingQueueMessages() {
+	for {
+		msg := <-broadcast
+
+		channelID := helper.UIntToString(msg.UserID) + "-RCQueueChannel"
+
+		for client := range queueChannels[channelID] {
+			err := client.WriteJSON(msg)
+			if err != nil {
+				log.Printf("error: %v", err)
+				client.Close()
+				delete(queueChannels[channelID], client)
+				if len(queueChannels[channelID]) == 0 {
+					delete(queueChannels, channelID)
+				}
+			}
+		}
 	}
 }

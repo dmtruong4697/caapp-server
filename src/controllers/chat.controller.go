@@ -34,7 +34,7 @@ func SendToChannelList(userID string, msg wsmodels.WSChannelListItemForBroadcast
 		Data:                     msg,
 		UserIDForMakingChannelID: userID,
 	}
-	ws.SendToBroadcast(msgForHandleMessage)
+	ws.SendToChannelListBroadcast(msgForHandleMessage)
 }
 
 func HandleConnections(c *gin.Context) {

@@ -6,6 +6,7 @@ import (
 	"os"
 
 	models "caapp-server/src/models/db_models"
+	rcdbmodels "caapp-server/src/models/db_models/rc_db_models"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
@@ -49,8 +50,13 @@ func Connect() {
 	DB.AutoMigrate(&models.Friend{})
 	DB.AutoMigrate(&models.FriendRequest{})
 	DB.AutoMigrate(&models.EmailValidateCode{})
-	DB.AutoMigrate(&models.MQueue{})
-	DB.AutoMigrate(&models.FQueue{})
+
+	// rc module
+	DB.AutoMigrate(&rcdbmodels.MQueue{})
+	DB.AutoMigrate(&rcdbmodels.FQueue{})
+	DB.AutoMigrate(&rcdbmodels.RCChannel{})
+	DB.AutoMigrate(&rcdbmodels.RCChannelMember{})
+	DB.AutoMigrate(&rcdbmodels.RCMessage{})
 
 	fmt.Println("Connected to", dbName, "database...")
 }

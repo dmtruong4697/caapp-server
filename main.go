@@ -4,7 +4,9 @@ import (
 	"caapp-server/src/controllers"
 	"caapp-server/src/database"
 	"caapp-server/src/routes"
+	rcroutines "caapp-server/src/routines/rc_routines"
 	"caapp-server/src/ws"
+	rcws "caapp-server/src/ws/rc_ws"
 	"log"
 	"net/http"
 	"os"
@@ -23,6 +25,10 @@ func main() {
 
 	go controllers.HandleMessages()
 	go ws.HandleChatListMessages()
+
+	// rc routine
+	go rcroutines.PairUser()
+	go rcws.HandleWaitingQueueMessages()
 
 	r := routes.SetupRouter()
 

@@ -27,6 +27,9 @@ type User struct {
 	DeviceToken        string    `json:"device_token"`
 	JobName            string    `json:"job_name"`
 	TimeZone           string    `json:"time_zone"`
+
+	// rc module
+	CurrentRCChannelID uint `json:"current_rc_channel_id"`
 }
 
 // AccountStatus:

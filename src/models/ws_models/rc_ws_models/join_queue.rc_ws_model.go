@@ -1,4 +1,4 @@
-package rcrequestmodels
+package rcwsmodels
 
 type RCQueueRequest struct {
 	UserID       uint   `json:"user_id"`
