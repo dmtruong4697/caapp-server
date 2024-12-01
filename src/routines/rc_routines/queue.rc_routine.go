@@ -5,6 +5,7 @@ import (
 	rcdbmodels "caapp-server/src/models/db_models/rc_db_models"
 	"caapp-server/src/utils/helper"
 	rcws "caapp-server/src/ws/rc_ws"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -31,6 +32,7 @@ func PairUser() {
 		database.DB.Order("join_at ASC").Find(&allUserInQueue)
 
 		if len(allUserInQueue) < 2 {
+			fmt.Println(time.Now())
 			time.Sleep(1 * time.Second)
 			continue
 		}
@@ -99,9 +101,9 @@ func PairUser() {
 		}
 
 		// xoa 2 user khoi queue
-		if err := database.DB.Delete(&userA).Error; err != nil {
+		if err := database.DB.Where("user_id = ?", userA.UserID).Delete(&userA).Error; err != nil {
 		}
-		if err := database.DB.Delete(&userB).Error; err != nil {
+		if err := database.DB.Where("user_id = ?", userB.UserID).Delete(&userB).Error; err != nil {
 		}
 
 	}

@@ -57,6 +57,7 @@ func Connect() {
 	DB.AutoMigrate(&rcdbmodels.RCChannel{})
 	DB.AutoMigrate(&rcdbmodels.RCChannelMember{})
 	DB.AutoMigrate(&rcdbmodels.RCMessage{})
+	DB.AutoMigrate(&rcdbmodels.GeneralQueueUser{})
 
 	fmt.Println("Connected to", dbName, "database...")
 }
