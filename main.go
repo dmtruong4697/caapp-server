@@ -23,8 +23,12 @@ func main() {
 
 	database.Connect()
 
+	// chat ws
 	go controllers.HandleMessages()
 	go ws.HandleChatListMessages()
+
+	// rc ws
+	go rcws.HandleRCChatMessages()
 
 	// rc routine
 	go rcroutines.PairUser()

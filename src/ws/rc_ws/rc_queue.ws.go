@@ -5,6 +5,7 @@ import (
 	rcdbmodels "caapp-server/src/models/db_models/rc_db_models"
 	rcwsmodels "caapp-server/src/models/ws_models/rc_ws_models"
 	"caapp-server/src/utils/helper"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -61,14 +62,25 @@ func HandleWaitingQueueConnections(c *gin.Context) {
 			break
 		}
 
-		var generalQueueUser rcdbmodels.GeneralQueueUser
-		generalQueueUser.UserID = msg.UserID
-		generalQueueUser.Gender = msg.Gender
-		generalQueueUser.TargetGender = msg.TargetGender
-		generalQueueUser.JoinAt = time.Now()
+		fmt.Println(msg)
 
-		if err := database.DB.Create(&generalQueueUser).Error; err != nil {
+		if msg.RequestType == "0" {
+			var generalQueueUser rcdbmodels.GeneralQueueUser
+			generalQueueUser.UserID = msg.UserID
+			generalQueueUser.Gender = msg.Gender
+			generalQueueUser.TargetGender = msg.TargetGender
+			generalQueueUser.JoinAt = time.Now()
 
+			if err := database.DB.Create(&generalQueueUser).Error; err != nil {
+			}
+		} else if msg.RequestType == "1" {
+			var generalQueueUser rcdbmodels.GeneralQueueUser
+			if err := database.DB.Where("user_id = ?", msg.UserID).First(&generalQueueUser).Error; err != nil {
+			}
+
+			// Xóa bản ghi
+			if err := database.DB.Where("user_id = ?", generalQueueUser.UserID).Delete(&generalQueueUser).Error; err != nil {
+			}
 		}
 	}
 }

@@ -5,7 +5,6 @@ import (
 	rcdbmodels "caapp-server/src/models/db_models/rc_db_models"
 	"caapp-server/src/utils/helper"
 	rcws "caapp-server/src/ws/rc_ws"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -32,7 +31,7 @@ func PairUser() {
 		database.DB.Order("join_at ASC").Find(&allUserInQueue)
 
 		if len(allUserInQueue) < 2 {
-			fmt.Println(time.Now())
+			// fmt.Println(time.Now())
 			time.Sleep(1 * time.Second)
 			continue
 		}
