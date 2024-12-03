@@ -2,6 +2,7 @@ package rcroutines
 
 import (
 	"caapp-server/src/database"
+	models "caapp-server/src/models/db_models"
 	rcdbmodels "caapp-server/src/models/db_models/rc_db_models"
 	"caapp-server/src/utils/helper"
 	rcws "caapp-server/src/ws/rc_ws"
@@ -74,6 +75,17 @@ func PairUser() {
 		}
 		if err := database.DB.Create(&channelMember2).Error; err != nil {
 		}
+
+		// update current rc channel id in user table
+		var dbUserA models.User
+		if err := database.DB.Where("id = ?", userA.UserID).First(&dbUserA).Error; err != nil {
+		}
+		dbUserA.CurrentRCChannelID = newRCChannel.ID
+
+		var dbUserB models.User
+		if err := database.DB.Where("id = ?", userB.UserID).First(&dbUserB).Error; err != nil {
+		}
+		dbUserB.CurrentRCChannelID = newRCChannel.ID
 
 		for client := range rcws.GetQueueChannels()[channelIDA] {
 			err := client.WriteJSON(newRCChannel)

@@ -27,10 +27,10 @@ func main() {
 	go controllers.HandleMessages()
 	go ws.HandleChatListMessages()
 
-	// rc ws
+	// rc chat ws
 	go rcws.HandleRCChatMessages()
 
-	// rc routine
+	// rc queue routine + ws
 	go rcroutines.PairUser()
 	go rcws.HandleWaitingQueueMessages()
 
