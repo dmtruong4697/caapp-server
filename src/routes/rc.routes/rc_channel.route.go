@@ -12,5 +12,6 @@ func SetupRCChannelRoutes(r *gin.Engine) {
 	{
 		rcChannelRoutes.POST("/chat-history", middlewares.AuthMiddleware(), rccontrollers.GetRCChannelChatHistory)
 		rcChannelRoutes.POST("/current-rc-channel", middlewares.AuthMiddleware(), rccontrollers.GetCurrentRCChannel)
+		rcChannelRoutes.POST("/leave-rc-channel", middlewares.AuthMiddleware(), rccontrollers.LeaveCurrentRCChannel)
 	}
 }

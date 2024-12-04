@@ -17,6 +17,10 @@ import (
 var RCChatChannels = make(map[string]map[*websocket.Conn]bool)
 var RCChatBroadcast = make(chan rcresponsemodel.GetRCChannelChatHistoryItem)
 
+func GetRCChatChannels() map[string]map[*websocket.Conn]bool {
+	return RCChatChannels
+}
+
 func HandleRCChatConnections(c *gin.Context) {
 	channelID := c.Query("channel_id") + "-RCChatChannel"
 

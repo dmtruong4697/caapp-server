@@ -6,7 +6,11 @@ import (
 	rcdbmodels "caapp-server/src/models/db_models/rc_db_models"
 	rcrequestmodels "caapp-server/src/models/request_models/rc_request_models"
 	rcresponsemodel "caapp-server/src/models/responce_models/rc_response_model"
+	"caapp-server/src/utils/helper"
+	rcws "caapp-server/src/ws/rc_ws"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -82,4 +86,58 @@ func LeaveCurrentRCChannel(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Khong tim thay channel"})
 		return
 	}
+
+	var channelMember rcdbmodels.RCChannelMember
+	if err := database.DB.Where("user_id = ? AND channel_id = ?", dbUser.ID, RCChannel.ID).First(&channelMember).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Khong tim thay channel member"})
+		return
+	}
+
+	var newNotificationMessage rcdbmodels.RCMessage
+	newNotificationMessage.ChannelID = RCChannel.ID
+	newNotificationMessage.CreateAt = time.Now()
+	newNotificationMessage.LastUpdate = time.Now()
+	newNotificationMessage.Type = "2"
+
+	// create new channel notification message
+	if err := database.DB.Create(&newNotificationMessage).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "loi tao moi tin nhan"})
+		return
+	}
+
+	// update channel last message id
+	RCChannel.LastMessageID = newNotificationMessage.ID
+	if err := database.DB.Save(&RCChannel).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "loi update channel"})
+		return
+	}
+
+	// update user's current rc channel
+	dbUser.CurrentRCChannelID = 0
+	if err := database.DB.Save(&dbUser).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "loi update db user"})
+		return
+	}
+
+	// delete rc channel member
+	if err := database.DB.Delete(&channelMember).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "loi xoa channel member"})
+		return
+	}
+
+	// send new notification message to ws chat channel
+	chatChannelID := helper.UIntToString(RCChannel.ID) + "-RCChatChannel"
+	for client := range rcws.GetRCChatChannels()[chatChannelID] {
+		err := client.WriteJSON(newNotificationMessage)
+		if err != nil {
+			log.Printf("error: %v", err)
+			client.Close()
+			delete(rcws.GetRCChatChannels()[chatChannelID], client)
+			if len(rcws.GetRCChatChannels()[chatChannelID]) == 0 {
+				delete(rcws.GetRCChatChannels(), chatChannelID)
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{})
 }
