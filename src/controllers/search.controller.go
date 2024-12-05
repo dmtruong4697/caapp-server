@@ -7,21 +7,30 @@ import (
 
 	"caapp-server/src/database"
 	db_models "caapp-server/src/models/db_models"
+	request_models "caapp-server/src/models/request_models"
 	responce_models "caapp-server/src/models/responce_models"
 	utils "caapp-server/src/utils"
 )
 
 func SearchUserByHashtagName(c *gin.Context) {
 	currentUserID := c.MustGet("id").(uint)
-	// hastagName := c.Query("hashtag_name")
 
-	var users []db_models.User
-	database.DB.Find(&users)
-
-	var res responce_models.SearchUserByHashtagNameResponce
-	for i := range users {
-		res.Users[i] = utils.GetUserInfo(currentUserID, users[i].ID)
+	var req request_models.SearchUserByHashtagNameRequest
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to decode request"})
+		return
 	}
+
+	var res responce_models.SearchUserByHashtagNameResponse
+
+	var dbUsers db_models.User
+	if err := database.DB.Where("hashtag_name = ?", req.HashtagName).First(&dbUsers).Error; err != nil {
+		res.IsFound = false
+		c.JSON(http.StatusOK, res)
+	}
+
+	res.User = utils.GetUserInfo(currentUserID, dbUsers.ID)
+	res.IsFound = true
 
 	c.JSON(http.StatusOK, res)
 }

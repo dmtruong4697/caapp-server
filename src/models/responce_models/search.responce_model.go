@@ -1,5 +1,6 @@
 package models
 
-type SearchUserByHashtagNameResponce struct {
-	Users []GetUserInfoResponce `json:"users"`
+type SearchUserByHashtagNameResponse struct {
+	User    GetUserInfoResponce `json:"user"`
+	IsFound bool                `json:"is_found"`
 }
