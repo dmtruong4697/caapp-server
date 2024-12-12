@@ -234,22 +234,23 @@ func Login(c *gin.Context) {
 }
 
 func Logout(c *gin.Context) {
-	var userRequest request_models.LogoutRequestBody
-	if err := c.BindJSON(&userRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_000012"})
-		return
-	}
+	currentUserID := c.MustGet("id").(uint)
+	// var userRequest request_models.LogoutRequestBody
+	// if err := c.BindJSON(&userRequest); err != nil {
+	// 	c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_000012"})
+	// 	return
+	// }
 
 	var dbUser db_models.User
-	if err := database.DB.Where("email = ?", userRequest.Email).First(&dbUser).Error; err != nil {
+	if err := database.DB.Where("id = ?", currentUserID).First(&dbUser).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error_code": "api_error_401_000013"})
 		return
 	}
 
-	if dbUser.Password != userRequest.Password {
-		c.JSON(http.StatusUnauthorized, gin.H{"error_code": "api_error_401_000033"})
-		return
-	}
+	// if dbUser.Password != userRequest.Password {
+	// 	c.JSON(http.StatusUnauthorized, gin.H{"error_code": "api_error_401_000033"})
+	// 	return
+	// }
 
 	// set device token
 	dbUser.DeviceToken = ""
