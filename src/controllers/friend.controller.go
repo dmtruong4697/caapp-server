@@ -202,10 +202,13 @@ func GetSuggestUser(c *gin.Context) {
 	database.DB.Find(&users)
 
 	var res GetSuggestUserResponce
-	res.Users = make([]responce_models.GetUserInfoResponce, len(users))
+	res.Users = make([]responce_models.GetUserInfoResponce, 0)
 
 	for i := range users {
-		res.Users[i] = utils.GetUserInfo(currentUserID, users[i].ID)
+		user := utils.GetUserInfo(currentUserID, users[i].ID)
+		if user.Request.ID <= 0 {
+			res.Users = append(res.Users, user)
+		}
 	}
 
 	c.JSON(http.StatusOK, res)
