@@ -64,6 +64,8 @@ cmd/
 # Docker
 docker-compose.override.yml
 *.env
+*.env.dev
+*.env.prod
 
 # Misc
 *.~*        # Backup files

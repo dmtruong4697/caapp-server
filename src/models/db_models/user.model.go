@@ -28,6 +28,9 @@ type User struct {
 	JobName            string    `json:"job_name"`
 	TimeZone           string    `json:"time_zone"`
 
+	//oauth2
+	GoogleID string `json:"google_id"`
+
 	// rc module
 	CurrentRCChannelID uint `json:"current_rc_channel_id"`
 }
