@@ -1,6 +1,7 @@
 package oauth2
 
 import (
+	"caapp-server/src/controllers"
 	"caapp-server/src/database"
 	"encoding/json"
 	"errors"
@@ -19,8 +20,6 @@ import (
 	"golang.org/x/oauth2/google"
 	"gorm.io/gorm"
 )
-
-var JwtKey = []byte("20204697")
 
 // luong khac (server thuc hien dang nhap)
 var googleOauthConfig = &oauth2.Config{
@@ -103,7 +102,7 @@ func HandleGoogleLogin(c *gin.Context) {
 			}
 
 			token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-			tokenString, err := token.SignedString(os.Getenv("JWT_KEY"))
+			tokenString, err := token.SignedString(controllers.JwtKey)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000010"})
 				return
@@ -126,7 +125,7 @@ func HandleGoogleLogin(c *gin.Context) {
 		}
 
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-		tokenString, err := token.SignedString(os.Getenv("JWT_KEY"))
+		tokenString, err := token.SignedString(controllers.JwtKey)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000010"})
 			return

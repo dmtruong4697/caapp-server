@@ -17,7 +17,7 @@ import (
 	utils "caapp-server/src/utils"
 )
 
-var JwtKey = []byte("20204697")
+var JwtKey = []byte(os.Getenv("JWT_KEY"))
 
 func Register(c *gin.Context) {
 	var req request_models.RegisterRequest
@@ -161,7 +161,7 @@ func ValidateEmail(c *gin.Context) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(os.Getenv("JWT_KEY"))
+	tokenString, err := token.SignedString(JwtKey)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000010"})
 		return
@@ -210,7 +210,7 @@ func Login(c *gin.Context) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(os.Getenv("JWT_KEY"))
+	tokenString, err := token.SignedString(JwtKey)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000010"})
 		return

@@ -17,10 +17,7 @@ import (
 )
 
 func main() {
-	// err := godotenv.Load()
-	// if err != nil {
-	// 	log.Fatal("Error loading .env file")
-	// }
+	// gin.SetMode(gin.ReleaseMode)
 	env := os.Getenv("APP_ENV")
 	envFile := fmt.Sprintf(".env.%s", env)
 	err := godotenv.Load(envFile)
