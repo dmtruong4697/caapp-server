@@ -7,6 +7,7 @@ import (
 	rcroutines "caapp-server/src/routines/rc_routines"
 	"caapp-server/src/ws"
 	rcws "caapp-server/src/ws/rc_ws"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -16,9 +17,15 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatal("Error loading .env file")
+	// }
+	env := os.Getenv("APP_ENV")
+	envFile := fmt.Sprintf(".env.%s", env)
+	err := godotenv.Load(envFile)
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatalf("Error loading %s file: %v", envFile, err)
 	}
 
 	database.Connect()

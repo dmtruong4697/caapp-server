@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	db_models "caapp-server/src/models/db_models"
@@ -23,9 +24,9 @@ var JwtKey = []byte("20204697")
 
 // luong khac (server thuc hien dang nhap)
 var googleOauthConfig = &oauth2.Config{
-	ClientID:     "537208903435-h7fvpeq8utrr1hhl4thaca6jvj4n4gv9.apps.googleusercontent.com",
-	ClientSecret: "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",
-	RedirectURL:  "http://localhost:8910/auth/google/callback",
+	ClientID:     os.Getenv("CLIENT_ID"),
+	ClientSecret: os.Getenv("CLIENT_SECRET"),
+	RedirectURL:  os.Getenv("REDIRECT_URL"),
 	Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"},
 	Endpoint:     google.Endpoint,
 }
@@ -102,7 +103,7 @@ func HandleGoogleLogin(c *gin.Context) {
 			}
 
 			token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-			tokenString, err := token.SignedString(JwtKey)
+			tokenString, err := token.SignedString(os.Getenv("JWT_KEY"))
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000010"})
 				return
@@ -125,7 +126,7 @@ func HandleGoogleLogin(c *gin.Context) {
 		}
 
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-		tokenString, err := token.SignedString(JwtKey)
+		tokenString, err := token.SignedString(os.Getenv("JWT_KEY"))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000010"})
 			return

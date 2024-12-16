@@ -15,5 +15,10 @@ func SetupAuthRoutes(r *gin.Engine) {
 		authRoutes.POST("/validate-email", controllers.ValidateEmail)
 		authRoutes.POST("/login", controllers.Login)
 		authRoutes.POST("/logout", middlewares.AuthMiddleware(), controllers.Logout)
+
+		authRoutes.POST("/forgot-password", controllers.ForgotPassword)
+		authRoutes.POST("/forgot-password-validate", controllers.ForgotPasswordValidate)
+		authRoutes.POST("forgot-password-change-password", controllers.ForgotPasswordChangePassword)
+		authRoutes.POST("/resend-forgot-password-validate-code", controllers.ResendForgotPasswordValidateCode)
 	}
 }

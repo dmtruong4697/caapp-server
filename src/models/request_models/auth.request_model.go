@@ -33,3 +33,21 @@ type RegisterRequest struct {
 type ResendValidateCodeRequest struct {
 	Email string `json:"email"`
 }
+
+type ForgotPasswordRequest struct {
+	Email string `json:"email"`
+}
+
+type ForgotPasswordValidateRequest struct {
+	Email        string `json:"email"`
+	ValidateCode string `json:"validate_code"`
+}
+
+type ForgotPasswordChangePasswordRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type ResendForgotPasswordValidateCodeRequest struct {
+	Email string `json:"email"`
+}

@@ -8,7 +8,6 @@ import (
 	models "caapp-server/src/models/db_models"
 	rcdbmodels "caapp-server/src/models/db_models/rc_db_models"
 
-	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -16,10 +15,17 @@ import (
 var DB *gorm.DB
 
 func Connect() {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	// err := godotenv.Load(".env")
+	// if err != nil {
+	// 	log.Fatal("Error loading .env file")
+	// }
+
+	// env := os.Getenv("APP_ENV")
+	// envFile := fmt.Sprintf(".env.%s", env)
+	// err := godotenv.Load(envFile)
+	// if err != nil {
+	// 	log.Fatalf("Error loading %s file: %v", envFile, err)
+	// }
 
 	dbHost := os.Getenv("DB_HOST")
 	dbPort := os.Getenv("DB_PORT")
@@ -50,6 +56,7 @@ func Connect() {
 	DB.AutoMigrate(&models.Friend{})
 	DB.AutoMigrate(&models.FriendRequest{})
 	DB.AutoMigrate(&models.EmailValidateCode{})
+	DB.AutoMigrate(&models.ForgotPasswordValidateCode{})
 
 	// rc module
 	DB.AutoMigrate(&rcdbmodels.MQueue{})
