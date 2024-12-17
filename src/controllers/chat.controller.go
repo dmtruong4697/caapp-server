@@ -42,13 +42,13 @@ func HandleConnections(c *gin.Context) {
 
 	channelID, err := strconv.ParseUint(channelIDStr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid channel ID"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_015001"})
 		return
 	}
 
 	ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upgrade connection"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_015002"})
 		return
 	}
 	defer ws.Close()
@@ -100,13 +100,13 @@ func HandleConnections(c *gin.Context) {
 
 		var channel db_models.Channel
 		if err := database.DB.Where("id = ?", msg.ChannelID).First(&channel).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error_code": ""})
+			c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_015003"})
 			return
 		}
 
 		channel.LastMessageID = msg.ID
 		if err := database.DB.Save(&channel).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error_code": ""})
+			c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_015004"})
 			return
 		}
 

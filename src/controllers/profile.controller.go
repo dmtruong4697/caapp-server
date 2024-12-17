@@ -24,7 +24,7 @@ func GetProfileInfo(c *gin.Context) {
 
 	var dbUser db_models.User
 	if err := database.DB.Where("id = ?", userID).First(&dbUser).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error_code": "api_error_401_000015"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_022001"})
 		return
 	}
 
@@ -108,13 +108,13 @@ func FirstUpdateProfileInfo(c *gin.Context) {
 
 	var req request_models.FirstUpdateProfileInfoRequest
 	if err := c.BindJSON((&req)); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "loi lay request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_024001"})
 		return
 	}
 
 	var user db_models.User
 	if err := database.DB.Where("id = ?", currentUserID).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_024002"})
 		return
 	}
 
@@ -130,7 +130,7 @@ func FirstUpdateProfileInfo(c *gin.Context) {
 	user.AccountStatus = "1"
 
 	if err := database.DB.Save(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user information"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_024003"})
 		return
 	}
 
@@ -141,7 +141,7 @@ func FirstUpdateProfileInfo(c *gin.Context) {
 func CheckDuplicateHashtagName(c *gin.Context) {
 	var req request_models.CheckDuplicateHashtagNameRequest
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "loi lay request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_023001"})
 		return
 	}
 
@@ -155,7 +155,7 @@ func CheckDuplicateHashtagName(c *gin.Context) {
 			return
 		} else {
 			// Xử lý các lỗi khác ngoài ErrRecordNotFound
-			c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_401_xxxxxx"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_023002"})
 			return
 		}
 	} else {

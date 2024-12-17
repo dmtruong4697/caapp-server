@@ -20,7 +20,7 @@ func GetChannelList(c *gin.Context) {
 
 	var getChannelListRequest request_models.GetChannelListRequest
 	if err := c.BindJSON(&getChannelListRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to decode request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_010001"})
 		return
 	}
 
@@ -61,7 +61,7 @@ func GetChannelList(c *gin.Context) {
 	for i := range channels {
 		var lastMessage db_models.Message
 		if err := database.DB.Where("id = ?", channels[i].LastMessageID).First(&lastMessage).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "message not found"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_010002"})
 			return
 		}
 
@@ -100,7 +100,7 @@ func CheckFriendchannel(c *gin.Context) {
 
 	var checkFriendChannelRequest request_models.CheckFriendChannelRequest
 	if err := c.BindJSON(&checkFriendChannelRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to decode request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "Failed to decode request"})
 		return
 	}
 
@@ -130,7 +130,7 @@ func CheckFriendchannel(c *gin.Context) {
 		}
 
 		if err := database.DB.Create(&newChannel).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create channel"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_011002"})
 			return
 		}
 
@@ -149,11 +149,11 @@ func CheckFriendchannel(c *gin.Context) {
 		}
 
 		if err := database.DB.Create(&channelMember1).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add current user to channel"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_011003"})
 			return
 		}
 		if err := database.DB.Create(&channelMember2).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add friend user to channel"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_011004"})
 			return
 		}
 
@@ -175,13 +175,13 @@ func GetFriendChannelInfo(c *gin.Context) {
 
 	var getFriendChannelInfoRequest request_models.GetFriendChannelInfoRequest
 	if err := c.BindJSON(&getFriendChannelInfoRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to decode request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_012001"})
 		return
 	}
 
 	var channel db_models.Channel
 	if err := database.DB.Where("id = ?", getFriendChannelInfoRequest.ChannelID).First(&channel).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Channel not found"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_012002"})
 		return
 	}
 
@@ -195,7 +195,7 @@ func GetFriendChannelInfo(c *gin.Context) {
 	var channelMember db_models.ChannelMember
 	result := database.DB.Raw(query, getFriendChannelInfoRequest.ChannelID, currentUserID).First(&channelMember)
 	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve channel member"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_012003"})
 		return
 	}
 
@@ -211,13 +211,13 @@ func GetGroupChannelInfo(c *gin.Context) {
 
 	var getGroupChannelInfoRequest request_models.GetGroupChannelInfoRequest
 	if err := c.BindJSON(&getGroupChannelInfoRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to decode request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_013001"})
 		return
 	}
 
 	var channel db_models.Channel
 	if err := database.DB.Where("id = ?", getGroupChannelInfoRequest.ChannelID).First(&channel).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "channel not found"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_013002"})
 		return
 	}
 
@@ -231,7 +231,7 @@ func GetGroupChannelInfo(c *gin.Context) {
 	var channelMembers []db_models.ChannelMember
 	err := database.DB.Select(&channelMembers, query, getGroupChannelInfoRequest.ChannelID, currentUserID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve channel member"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_013003"})
 		return
 	}
 
@@ -249,19 +249,19 @@ func GetChannelChatHistory(c *gin.Context) {
 
 	var req request_models.GetChannelChatHistoryRequest
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to decode request info"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_014001"})
 		return
 	}
 
 	var channelMember db_models.ChannelMember
 	if err := database.DB.Where("channel_id = ? AND user_id = ?", req.ChannelID, currentUserID).First(&channelMember).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User is not a member of the channel"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_014002"})
 		return
 	}
 
 	var messages []db_models.Message
 	if err := database.DB.Where("channel_id = ?", req.ChannelID).Order("create_at DESC").Find(&messages).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch messages"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_014003"})
 		return
 	}
 
@@ -272,7 +272,7 @@ func GetChannelChatHistory(c *gin.Context) {
 	for i := range messages {
 		var medias []db_models.Media
 		if err := database.DB.Where("message_id = ?", messages[i].ID).Find(&medias).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch medias"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_014004"})
 			return
 		}
 

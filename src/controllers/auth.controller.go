@@ -22,13 +22,13 @@ var JwtKey = []byte(os.Getenv("JWT_KEY"))
 func Register(c *gin.Context) {
 	var req request_models.RegisterRequest
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "loi lay request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_001001"})
 		return
 	}
 
 	existingUser := db_models.User{}
 	if err := database.DB.Where("email = ?", req.Email).First(&existingUser).Error; err == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_401_000002"})
+		c.JSON(http.StatusConflict, gin.H{"error_code": "api_error_409_001002"})
 		return
 	}
 
@@ -44,7 +44,7 @@ func Register(c *gin.Context) {
 				ExpireAt:     time.Now().Add(5 * time.Minute),
 			}
 			if createErr := database.DB.Create(&newEmailValidateCode).Error; createErr != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_401_xxxxxx"})
+				c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_001003"})
 				return
 			}
 
@@ -54,7 +54,7 @@ func Register(c *gin.Context) {
 			utils.SendEmail(req.Email, header, body)
 		} else {
 			// Xử lý các lỗi khác ngoài ErrRecordNotFound
-			c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_401_xxxxxx"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_001004"})
 		}
 	} else {
 		emailValidateCode.ValidateCode = utils.GenerateRandomCode(6)
@@ -62,7 +62,7 @@ func Register(c *gin.Context) {
 		emailValidateCode.ExpireAt = time.Now().Add(5 * time.Minute)
 
 		if updateErr := database.DB.Save(&emailValidateCode).Error; updateErr != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_401_xxxxxx"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_001005"})
 			return
 		}
 
@@ -78,14 +78,14 @@ func Register(c *gin.Context) {
 func ResendValidateCode(c *gin.Context) {
 	var req request_models.ResendValidateCodeRequest
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "loi lay request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_002001"})
 		return
 	}
 
 	var emailValidateCode db_models.EmailValidateCode
 
 	if err := database.DB.Where("email = ?", req.Email).First(&emailValidateCode).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "loi tim kiem ban ghi"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_002002"})
 		return
 	}
 
@@ -94,7 +94,7 @@ func ResendValidateCode(c *gin.Context) {
 	emailValidateCode.ExpireAt = time.Now().Add(5 * time.Minute)
 
 	if updateErr := database.DB.Save(&emailValidateCode).Error; updateErr != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "loi cap nhat ban ghi email validate code"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_002003"})
 		return
 	}
 
@@ -109,24 +109,24 @@ func ResendValidateCode(c *gin.Context) {
 func ValidateEmail(c *gin.Context) {
 	var req request_models.ValidateEmailRequest
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_xxxxxx"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_003001"})
 		return
 	}
 
 	emailValidateCode := db_models.EmailValidateCode{}
 	if err := database.DB.Where("email = ?", req.Email).First(&emailValidateCode).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "khong tim thay email tuong ung"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_003002"})
 		return
 	}
 
 	// kiem tra validate con hieu luc
 	if emailValidateCode.ExpireAt.Before(time.Now()) {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "validate code het thoi han"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_003003"})
 		return
 	}
 
 	if emailValidateCode.ValidateCode != req.ValidateCode {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "sai ma xac thuc"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_003004"})
 		return
 	}
 
@@ -140,13 +140,13 @@ func ValidateEmail(c *gin.Context) {
 	newUser.LastUpdate = time.Now()
 
 	if err := database.DB.Create(&newUser).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "loi tao moi nguoi dung vao db"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_003005"})
 		return
 	}
 
 	// Xóa bản ghi emailValidateCode
 	if err := database.DB.Delete(&emailValidateCode).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "loi_xoa_email_validate_code"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_003006"})
 		return
 	}
 
@@ -177,25 +177,25 @@ func ValidateEmail(c *gin.Context) {
 func Login(c *gin.Context) {
 	var userRequest request_models.LoginRequestBody
 	if err := c.BindJSON(&userRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_000008"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_004001"})
 		return
 	}
 
 	var dbUser db_models.User
 	if err := database.DB.Where("email = ?", userRequest.Email).First(&dbUser).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error_code": "api_error_401_000001"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_004002"})
 		return
 	}
 
 	if dbUser.Password != userRequest.Password {
-		c.JSON(http.StatusUnauthorized, gin.H{"error_code": "api_error_401_000001"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_004003"})
 		return
 	}
 
 	// set device token
 	dbUser.DeviceToken = userRequest.DeviceToken
 	if err := database.DB.Save(&dbUser).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000009"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_004004"})
 		return
 	}
 
@@ -212,7 +212,7 @@ func Login(c *gin.Context) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(JwtKey)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000010"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_004005"})
 		return
 	}
 
@@ -244,7 +244,7 @@ func Logout(c *gin.Context) {
 
 	var dbUser db_models.User
 	if err := database.DB.Where("id = ?", currentUserID).First(&dbUser).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error_code": "api_error_401_000013"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_005001"})
 		return
 	}
 
@@ -256,24 +256,23 @@ func Logout(c *gin.Context) {
 	// set device token
 	dbUser.DeviceToken = ""
 	if err := database.DB.Save(&dbUser).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_000014"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_005002"})
 		return
 	}
 
-	message := "Logout successful."
-	c.JSON(http.StatusOK, gin.H{"message": message})
+	c.JSON(http.StatusOK, gin.H{})
 }
 
 func ForgotPassword(c *gin.Context) {
 	var req request_models.ForgotPasswordRequest
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_006001"})
 		return
 	}
 
 	var dbUser db_models.User
 	if err := database.DB.Where("email = ?", req.Email).First(&dbUser).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error_code": "api_error_401_"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_006002"})
 		return
 	}
 
@@ -288,7 +287,7 @@ func ForgotPassword(c *gin.Context) {
 				ExpireAt:     time.Now().Add(5 * time.Minute),
 			}
 			if createErr := database.DB.Create(&newForgotPasswordValidateCode).Error; createErr != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_401_xxxxxx"})
+				c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_006003"})
 				return
 			}
 
@@ -298,7 +297,7 @@ func ForgotPassword(c *gin.Context) {
 			utils.SendEmail(req.Email, header, body)
 		} else {
 			// Xử lý các lỗi khác ngoài ErrRecordNotFound
-			c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_401_xxxxxx"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_006004"})
 		}
 	} else {
 		forgotPasswordVaidateCode.ValidateCode = utils.GenerateRandomCode(6)
@@ -306,7 +305,7 @@ func ForgotPassword(c *gin.Context) {
 		forgotPasswordVaidateCode.ExpireAt = time.Now().Add(5 * time.Minute)
 
 		if updateErr := database.DB.Save(&forgotPasswordVaidateCode).Error; updateErr != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_401_xxxxxx"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_006005"})
 			return
 		}
 
@@ -322,30 +321,30 @@ func ForgotPassword(c *gin.Context) {
 func ForgotPasswordValidate(c *gin.Context) {
 	var req request_models.ForgotPasswordValidateRequest
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_007001"})
 		return
 	}
 
 	forgotPasswordValidateCode := db_models.ForgotPasswordValidateCode{}
 	if err := database.DB.Where("email = ?", req.Email).First(&forgotPasswordValidateCode).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "khong tim thay email tuong ung"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_007002"})
 		return
 	}
 
 	// kiem tra validate con hieu luc
 	if forgotPasswordValidateCode.ExpireAt.Before(time.Now()) {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "validate code het thoi han"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_007003"})
 		return
 	}
 
 	if forgotPasswordValidateCode.ValidateCode != req.ValidateCode {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "sai ma xac thuc"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_007004"})
 		return
 	}
 
 	// Xóa bản ghi emailValidateCode
 	if err := database.DB.Delete(&forgotPasswordValidateCode).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "loi_xoa_validate_code"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_007005"})
 		return
 	}
 
@@ -355,19 +354,19 @@ func ForgotPasswordValidate(c *gin.Context) {
 func ForgotPasswordChangePassword(c *gin.Context) {
 	var req request_models.ForgotPasswordChangePasswordRequest
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_008001"})
 		return
 	}
 
 	var dbUser db_models.User
 	if err := database.DB.Where("email = ?", req.Email).First(&dbUser).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error_code": "api_error_401_"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_008002"})
 		return
 	}
 
 	dbUser.Password = req.Password
 	if err := database.DB.Save(&dbUser).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_xxxxxx"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_008003"})
 		return
 	}
 
@@ -377,14 +376,14 @@ func ForgotPasswordChangePassword(c *gin.Context) {
 func ResendForgotPasswordValidateCode(c *gin.Context) {
 	var req request_models.ResendForgotPasswordValidateCodeRequest
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_009001"})
 		return
 	}
 
 	var forgotPasswordValidateCode db_models.ForgotPasswordValidateCode
 
 	if err := database.DB.Where("email = ?", req.Email).First(&forgotPasswordValidateCode).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "loi tim kiem ban ghi"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_009002"})
 		return
 	}
 
@@ -393,7 +392,7 @@ func ResendForgotPasswordValidateCode(c *gin.Context) {
 	forgotPasswordValidateCode.ExpireAt = time.Now().Add(5 * time.Minute)
 
 	if updateErr := database.DB.Save(&forgotPasswordValidateCode).Error; updateErr != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "loi cap nhat ban ghi email validate code"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "loi cap nhat ban ghi email validate code"})
 		return
 	}
 

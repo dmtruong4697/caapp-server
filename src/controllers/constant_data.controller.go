@@ -18,20 +18,20 @@ func GetLanguageDataList(c *gin.Context) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		fmt.Println(err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "loi mo file language data"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_016001"})
 		return
 	}
 	defer file.Close()
 
 	content, err := ioutil.ReadAll(file)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "loi doc file language data"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_016002"})
 		return
 	}
 
 	var languages []response_models.GetLanguageDataListResponseItem
 	if err := json.Unmarshal(content, &languages); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "loi paste file language data"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_016003"})
 		return
 	}
 

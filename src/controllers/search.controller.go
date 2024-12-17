@@ -17,7 +17,7 @@ func SearchUserByHashtagName(c *gin.Context) {
 
 	var req request_models.SearchUserByHashtagNameRequest
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to decode request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_025001"})
 		return
 	}
 
