@@ -34,12 +34,15 @@ func SetupRouter() *gin.Engine {
 	// Constant Data routes
 	SetupConstantDataRoutes(r)
 
-	// Test
+	// User routes
+	SetupUserRoutes(r)
+
+	// Test routes
 	SetupTestRoutes(r)
 
 	wsroutes.SetupWSChatListRoutes(r)
 
-	// rc module
+	// RC module routes
 	rcroutes.SetupRCQueueRoutes(r)
 	rcroutes.SetupRCChannelRoutes(r)
 	rcroutes.SetupRCChatRoutes(r)

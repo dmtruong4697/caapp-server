@@ -30,3 +30,7 @@ type GetUserInfoResponce struct {
 	Friend             models.Friend        `json:"friend"`
 	Request            models.FriendRequest `json:"request"`
 }
+
+type GetUserFriendResponse struct {
+	Users []GetUserInfoResponce `json:"users"`
+}
