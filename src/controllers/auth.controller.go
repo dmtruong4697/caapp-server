@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -25,6 +26,8 @@ func Register(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_001001"})
 		return
 	}
+
+	req.Email = strings.ToLower(req.Email)
 
 	existingUser := db_models.User{}
 	if err := database.DB.Where("email = ?", req.Email).First(&existingUser).Error; err == nil {
@@ -82,6 +85,8 @@ func ResendValidateCode(c *gin.Context) {
 		return
 	}
 
+	req.Email = strings.ToLower(req.Email)
+
 	var emailValidateCode db_models.EmailValidateCode
 
 	if err := database.DB.Where("email = ?", req.Email).First(&emailValidateCode).Error; err != nil {
@@ -112,6 +117,8 @@ func ValidateEmail(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_003001"})
 		return
 	}
+
+	req.Email = strings.ToLower(req.Email)
 
 	emailValidateCode := db_models.EmailValidateCode{}
 	if err := database.DB.Where("email = ?", req.Email).First(&emailValidateCode).Error; err != nil {
@@ -180,6 +187,8 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_004001"})
 		return
 	}
+
+	userRequest.Email = strings.ToLower(userRequest.Email)
 
 	var dbUser db_models.User
 	if err := database.DB.Where("email = ?", userRequest.Email).First(&dbUser).Error; err != nil {
@@ -270,6 +279,8 @@ func ForgotPassword(c *gin.Context) {
 		return
 	}
 
+	req.Email = strings.ToLower(req.Email)
+
 	var dbUser db_models.User
 	if err := database.DB.Where("email = ?", req.Email).First(&dbUser).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_006002"})
@@ -325,6 +336,8 @@ func ForgotPasswordValidate(c *gin.Context) {
 		return
 	}
 
+	req.Email = strings.ToLower(req.Email)
+
 	forgotPasswordValidateCode := db_models.ForgotPasswordValidateCode{}
 	if err := database.DB.Where("email = ?", req.Email).First(&forgotPasswordValidateCode).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_007002"})
@@ -358,6 +371,8 @@ func ForgotPasswordChangePassword(c *gin.Context) {
 		return
 	}
 
+	req.Email = strings.ToLower(req.Email)
+
 	var dbUser db_models.User
 	if err := database.DB.Where("email = ?", req.Email).First(&dbUser).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_008002"})
@@ -379,6 +394,8 @@ func ResendForgotPasswordValidateCode(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_009001"})
 		return
 	}
+
+	req.Email = strings.ToLower(req.Email)
 
 	var forgotPasswordValidateCode db_models.ForgotPasswordValidateCode
 
