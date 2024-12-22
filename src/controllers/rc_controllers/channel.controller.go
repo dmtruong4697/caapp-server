@@ -93,20 +93,20 @@ func LeaveCurrentRCChannel(c *gin.Context) {
 		return
 	}
 
-	var newNotificationMessage rcdbmodels.RCMessage
-	newNotificationMessage.ChannelID = RCChannel.ID
-	newNotificationMessage.CreateAt = time.Now()
-	newNotificationMessage.LastUpdate = time.Now()
-	newNotificationMessage.Type = "2"
+	var newNotificationMessage rcresponsemodel.GetRCChannelChatHistoryItem
+	newNotificationMessage.Message.ChannelID = RCChannel.ID
+	newNotificationMessage.Message.CreateAt = time.Now()
+	newNotificationMessage.Message.LastUpdate = time.Now()
+	newNotificationMessage.Message.Type = "2"
 
 	// create new channel notification message
-	if err := database.DB.Create(&newNotificationMessage).Error; err != nil {
+	if err := database.DB.Create(&newNotificationMessage.Message).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error_code": "loi tao moi tin nhan"})
 		return
 	}
 
 	// update channel last message id
-	RCChannel.LastMessageID = newNotificationMessage.ID
+	RCChannel.LastMessageID = newNotificationMessage.Message.ID
 	if err := database.DB.Save(&RCChannel).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error_code": "loi update channel"})
 		return
