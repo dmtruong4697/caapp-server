@@ -13,6 +13,8 @@ import (
 	request_models "caapp-server/src/models/request_models"
 	responce_models "caapp-server/src/models/responce_models"
 
+	"math/rand"
+
 	utils "caapp-server/src/utils"
 )
 
@@ -201,10 +203,16 @@ func GetSuggestUser(c *gin.Context) {
 	var users []db_models.User
 	database.DB.Find(&users)
 
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(len(users), func(i, j int) { users[i], users[j] = users[j], users[i] })
+
 	var res GetSuggestUserResponce
 	res.Users = make([]responce_models.GetUserInfoResponce, 0)
 
 	for i := range users {
+		if len(res.Users) >= 5 {
+			break
+		}
 		user := utils.GetUserInfo(currentUserID, users[i].ID)
 		if user.Request.ID <= 0 {
 			res.Users = append(res.Users, user)
