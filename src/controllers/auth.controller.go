@@ -145,6 +145,7 @@ func ValidateEmail(c *gin.Context) {
 	newUser.CreateAt = time.Now()
 	newUser.LastActive = time.Now()
 	newUser.LastUpdate = time.Now()
+	newUser.AvatarImage = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT5bP009mhqzNrdKcPPnWSSkhtIu1FPSmeI8iSJDpTs4B4oDv--N_qM7y2xzZoF2uBX8mI&usqp=CAU"
 
 	if err := database.DB.Create(&newUser).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_003005"})
