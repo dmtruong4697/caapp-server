@@ -46,6 +46,7 @@ func SetupRouter() *gin.Engine {
 	rcroutes.SetupRCQueueRoutes(r)
 	rcroutes.SetupRCChannelRoutes(r)
 	rcroutes.SetupRCChatRoutes(r)
+	rcroutes.SetupRCReportRoutes(r)
 
 	return r
 }
