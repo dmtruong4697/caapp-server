@@ -193,8 +193,13 @@ func Login(c *gin.Context) {
 
 	var dbUser db_models.User
 	if err := database.DB.Where("email = ?", userRequest.Email).First(&dbUser).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_004002"})
-		return
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_004003"})
+			return
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_004002"})
+			return
+		}
 	}
 
 	if dbUser.Password != userRequest.Password {

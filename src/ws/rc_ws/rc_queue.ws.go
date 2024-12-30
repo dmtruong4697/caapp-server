@@ -43,7 +43,24 @@ func HandleWaitingQueueConnections(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upgrade connection"})
 		return
 	}
-	defer ws.Close()
+	fmt.Println("user id out: ", channelID)
+
+	defer func() {
+		fmt.Println("user id: ", channelID)
+		ws.Close()
+		delete(queueChannels[channelID], ws)
+		if len(queueChannels[channelID]) == 0 {
+			delete(queueChannels, channelID)
+		}
+
+		var generalQueueUser rcdbmodels.GeneralQueueUser
+		if err := database.DB.Where("user_id = ?", helper.StringToUInt(userID)).First(&generalQueueUser).Error; err == nil {
+			if err := database.DB.Delete(&generalQueueUser).Error; err != nil {
+				log.Printf("error deleting user from general queue: %v", err)
+			}
+		}
+		fmt.Println("user id: ", channelID)
+	}()
 
 	if queueChannels[channelID] == nil {
 		queueChannels[channelID] = make(map[*websocket.Conn]bool)
