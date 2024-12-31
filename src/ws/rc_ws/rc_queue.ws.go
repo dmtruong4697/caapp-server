@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -43,10 +42,8 @@ func HandleWaitingQueueConnections(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upgrade connection"})
 		return
 	}
-	fmt.Println("user id out: ", channelID)
 
 	defer func() {
-		fmt.Println("user id: ", channelID)
 		ws.Close()
 		delete(queueChannels[channelID], ws)
 		if len(queueChannels[channelID]) == 0 {
@@ -59,7 +56,6 @@ func HandleWaitingQueueConnections(c *gin.Context) {
 				log.Printf("error deleting user from general queue: %v", err)
 			}
 		}
-		fmt.Println("user id: ", channelID)
 	}()
 
 	if queueChannels[channelID] == nil {
@@ -86,7 +82,6 @@ func HandleWaitingQueueConnections(c *gin.Context) {
 			generalQueueUser.UserID = msg.UserID
 			generalQueueUser.Gender = msg.Gender
 			generalQueueUser.TargetGender = msg.TargetGender
-			generalQueueUser.JoinAt = time.Now()
 
 			if err := database.DB.Create(&generalQueueUser).Error; err != nil {
 			}

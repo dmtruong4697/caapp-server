@@ -35,44 +35,49 @@ func GetProfileInfo(c *gin.Context) {
 }
 
 func UpdateProfileInfo(c *gin.Context) {
-	email := c.MustGet("email").(string)
+	currentUserID := c.MustGet("id").(uint)
 
-	var dbUser db_models.User
-	if err := database.DB.Where("email = ?", email).First(&dbUser).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+	var req request_models.UpdateProfileRequest
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_028001"})
 		return
 	}
 
-	var updatedProfile request_models.UpdatedProfileRequest
-	if err := c.BindJSON(&updatedProfile); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to decode user info"})
+	// check duplicate hashtag name
+	var existingUser db_models.User
+	if err := database.DB.Where("hashtag_name = ?", req.HashtagName).First(&existingUser).Error; err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_028002"})
+	}
+
+	// update database
+	var user db_models.User
+	if err := database.DB.Where("id = ?", currentUserID).First(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_028003"})
 		return
 	}
 
-	// Update user profile
-	dbUser.FirstName = updatedProfile.FirstName
-	dbUser.MiddleName = updatedProfile.MiddleName
-	dbUser.LastName = updatedProfile.LastName
-	dbUser.PhoneNumber = updatedProfile.PhoneNumber
-	dbUser.AvatarImage = updatedProfile.AvatarImage
-	dbUser.CoverImage = updatedProfile.CoverImage
-	dbUser.HashtagName = updatedProfile.HashtagName
-	dbUser.Gender = updatedProfile.Gender
-	dbUser.DateOfBirth = updatedProfile.DateOfBirth
-	dbUser.Language = updatedProfile.Language
-	dbUser.Country = updatedProfile.Country
-	dbUser.ProfileDescription = updatedProfile.ProfileDescription
-	dbUser.JobName = updatedProfile.JobName
-	dbUser.TimeZone = updatedProfile.TimeZone
-	dbUser.LastUpdate = time.Now()
+	user.PhoneNumber = req.PhoneNumber
+	user.FirstName = req.FirstName
+	user.MiddleName = req.MiddleName
+	user.LastName = req.LastName
+	user.DateOfBirth = req.DateOfBirth
+	user.HashtagName = req.HashtagName
+	user.Gender = req.Gender
+	user.Language = req.Language
+	user.Country = req.Country
+	user.ProfileDescription = req.ProfileDescription
+	user.AvatarImage = req.AvatarImage
+	user.CoverImage = req.CoverImage
+	user.JobName = req.JobName
+	user.TimeZone = req.TimeZone
+	user.LastUpdate = time.Now()
 
-	// Save update
-	if err := database.DB.Save(&dbUser).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user information"})
+	if err := database.DB.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "api_error_500_028004"})
 		return
 	}
 
-	c.JSON(http.StatusOK, dbUser)
+	c.JSON(http.StatusOK, gin.H{})
 }
 
 func UpdatePassword(c *gin.Context) {
