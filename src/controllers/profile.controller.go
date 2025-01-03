@@ -14,12 +14,6 @@ import (
 )
 
 func GetProfileInfo(c *gin.Context) {
-
-	// var req request_models.GetProfileInfoRequest
-	// if err := c.BindJSON(&req); err != nil {
-	// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to decode request info"})
-	// 	return
-	// }
 	userID := c.MustGet("id").(uint)
 
 	var dbUser db_models.User
@@ -46,7 +40,10 @@ func UpdateProfileInfo(c *gin.Context) {
 	// check duplicate hashtag name
 	var existingUser db_models.User
 	if err := database.DB.Where("hashtag_name = ?", req.HashtagName).First(&existingUser).Error; err == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_028002"})
+		if currentUserID != existingUser.ID {
+			c.JSON(http.StatusBadRequest, gin.H{"error_code": "api_error_400_028002"})
+			return
+		}
 	}
 
 	// update database
