@@ -4,10 +4,14 @@ import (
 	"caapp-server/src/utils/helper"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 
 	"github.com/gin-gonic/gin"
 	"gopkg.in/gomail.v2"
+
+	"crypto/md5"
+	"encoding/hex"
 )
 
 func TestSendMail(c *gin.Context) {
@@ -110,4 +114,17 @@ func TestSendMail(c *gin.Context) {
 
 	// Respond with success
 	c.JSON(http.StatusOK, gin.H{"message": "Email sent successfully!"})
+}
+
+func TestDiceBear(c *gin.Context) {
+	normalizedEmail := url.QueryEscape("duongminhtruong2002.lequydon@gmail.com")
+	hasher := md5.New()
+	hasher.Write([]byte(normalizedEmail))
+	emailHash := hex.EncodeToString(hasher.Sum(nil))
+
+	dicebearURL := fmt.Sprintf("https://api.dicebear.com/5.x/identicon/svg?seed=%s", emailHash)
+
+	c.JSON(http.StatusOK, gin.H{
+		"avatar_url": dicebearURL,
+	})
 }

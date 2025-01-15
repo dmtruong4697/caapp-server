@@ -10,5 +10,6 @@ func SetupTestRoutes(r *gin.Engine) {
 	profileRoutes := r.Group("/test")
 	{
 		profileRoutes.POST("/send-mail", controllers.TestSendMail)
+		profileRoutes.GET("/dice-bear", controllers.TestDiceBear)
 	}
 }
