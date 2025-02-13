@@ -9,8 +9,8 @@ type GetFriendRequestResponce struct {
 }
 
 type GetListFriendRequestReceivedResponceItem struct {
-	User          GetUserInfoResponce `json:"user"`
-	FriendRequest models.FriendRequest
+	User          GetUserInfoResponce  `json:"user"`
+	FriendRequest models.FriendRequest `json:"friend_request"`
 }
 
 type GetListFriendRequestReceivedResponce struct {
@@ -18,10 +18,18 @@ type GetListFriendRequestReceivedResponce struct {
 }
 
 type GetListFriendRequestSentResponceItem struct {
-	User          GetUserInfoResponce `json:"user"`
-	FriendRequest models.FriendRequest
+	User          GetUserInfoResponce  `json:"user"`
+	FriendRequest models.FriendRequest `json:"friend_request"`
 }
 
 type GetListFriendRequestSentResponce struct {
 	Requests []GetListFriendRequestReceivedResponceItem `json:"requests"`
+}
+
+type GetSuggestUserResponce struct {
+	Users []GetUserInfoResponce `json:"users"`
+}
+
+type GetAllMyFriendResponce struct {
+	Friends []GetUserInfoResponce `json:"friends"`
 }

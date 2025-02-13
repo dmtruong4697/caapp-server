@@ -13,7 +13,7 @@ type User struct {
 	DateOfBirth        time.Time `json:"date_of_birth"`
 	HashtagName        string    `json:"hashtag_name"`
 	Gender             string    `json:"gender"`
-	Language           string    `json:"language"`
+	Language           string    `json:"language"` //su dung language code
 	Country            string    `json:"country"`
 	ProfileDescription string    `json:"profile_description"`
 	AvatarImage        string    `json:"avatar_image"`
@@ -27,4 +27,21 @@ type User struct {
 	DeviceToken        string    `json:"device_token"`
 	JobName            string    `json:"job_name"`
 	TimeZone           string    `json:"time_zone"`
+
+	//oauth2
+	GoogleID string `json:"google_id"`
+
+	// rc module
+	CurrentRCChannelID uint `json:"current_rc_channel_id"`
 }
+
+// AccountStatus:
+// 0: qua validate email (đã có thể đăng nhập, chưa thể sử dụng app)
+// 1: qua nhập thông tin (đã có thể đăng nhập, sử dụng app)
+// 99: banned (không thể đăng nhập, không thể sử dụng app)
+
+// VerificationStatus:
+//0: default user
+//1: verified user
+//990: admin
+//999: @@

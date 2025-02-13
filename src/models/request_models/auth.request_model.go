@@ -8,8 +8,9 @@ type LoginClaims struct {
 	jwt.StandardClaims
 }
 
-type ValidateEmailRequestBody struct {
+type ValidateEmailRequest struct {
 	Email        string `json:"email"`
+	Password     string `json:"password"`
 	ValidateCode string `json:"validate_code"`
 }
 
@@ -22,4 +23,31 @@ type LoginRequestBody struct {
 type LogoutRequestBody struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+type RegisterRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type ResendValidateCodeRequest struct {
+	Email string `json:"email"`
+}
+
+type ForgotPasswordRequest struct {
+	Email string `json:"email"`
+}
+
+type ForgotPasswordValidateRequest struct {
+	Email        string `json:"email"`
+	ValidateCode string `json:"validate_code"`
+}
+
+type ForgotPasswordChangePasswordRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type ResendForgotPasswordValidateCodeRequest struct {
+	Email string `json:"email"`
 }

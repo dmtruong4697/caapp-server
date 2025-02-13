@@ -1,13 +1,15 @@
 package utils
 
 import (
+	"caapp-server/src/utils/helper"
 	"math/rand"
+	"os"
 	"time"
 
 	"gopkg.in/gomail.v2"
 )
 
-const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+const letterBytes = "1234567890"
 
 func GenerateRandomCode(n int) string {
 	b := make([]byte, n)
@@ -21,7 +23,7 @@ func GenerateRandomCode(n int) string {
 func SendEmail(to, subject, body string) error {
 	mailer := gomail.NewMessage()
 
-	mailer.SetHeader("From", "duongminhtruong2002.lequydon@gmail.com")
+	mailer.SetHeader("From", os.Getenv("MAIL_USERNAME"))
 
 	mailer.SetHeader("To", to)
 
@@ -29,8 +31,15 @@ func SendEmail(to, subject, body string) error {
 
 	mailer.SetBody("text/plain", body)
 
-	dialer := gomail.NewDialer("smtp.example.com", 587, "duongminhtruong2002.lequydon@gmail.com", "jhda naqz lyrp eozp")
+	// Configure the SMTP connection
+	dialer := gomail.NewDialer(
+		os.Getenv("MAIL_HOST"),
+		int(helper.StringToUInt(os.Getenv("MAIL_PORT"))),
+		os.Getenv("MAIL_USERNAME"),
+		os.Getenv("MAIL_PASSWORD"),
+	)
 
+	// Send the email
 	err := dialer.DialAndSend(mailer)
 	if err != nil {
 		return err

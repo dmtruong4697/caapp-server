@@ -1,0 +1,72 @@
+# Binaries for programs and plugins
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Build directories
+/bin/
+/build/
+*.out
+
+# Vendor directories (auto-generated during build or dependency resolution)
+vendor/
+
+# Test binary, coverage reports
+*.test
+*.cov
+*.coverprofile
+*.cover.out
+
+# Logs
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDE and editor files
+.idea/
+*.iml
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Dependency tools
+/go.sum
+/go.work
+/go.work.sum
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+
+# Generated files
+*.gen.go
+*.pb.go
+*.pb.gw.go
+
+# Modules cache (if using local Go module cache)
+Gopkg.lock
+Gopkg.toml
+
+# Go binaries and tools
+*.mod
+bin/
+pkg/
+cmd/
+
+# Docker
+docker-compose.override.yml
+*.env
+*.env.dev
+*.env.prod
+*.env.test
+
+# Misc
+*.~*        # Backup files

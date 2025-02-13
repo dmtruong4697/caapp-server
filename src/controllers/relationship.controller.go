@@ -23,7 +23,7 @@ func GetRelationship(c *gin.Context) {
 
 	var friend db_models.Friend
 	database.DB.Where(
-		"(sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)",
+		"(first_user_id_id = ? AND second_user_id = ?) OR (second_user_id = ? AND first_user_id_id = ?)",
 		currentUserID,
 		req.UserID,
 		req.UserID,
